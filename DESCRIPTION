@@ -1,0 +1,22 @@
+Package: hdf5r.Extra
+Type: Package
+Title: Extensions for HDF5 R Interfaces
+Version: 0.0.1
+Date: 2023-08-26
+Authors@R: person(given = "Yuchen", family = "Li", email = "ycli1995@outlook.com", role = c("aut", "cre"))
+Description: This package contains some methods to manipulate HDF5 files, extending the 'hdf5r' package. Reading and writing R objects to HDF5 formats follow the spcification of AnnData <https://anndata.readthedocs.io/en/latest/fileformat-prose.html>.
+Depends: R (>= 4.1.0), methods, utils
+Imports:
+    checkmate,
+    dplyr, 
+    easy.utils, 
+    hdf5r, 
+    Matrix, 
+    MatrixExtra, 
+    rlang
+License: MIT + file LICENSE
+RoxygenNote: 7.2.3
+Encoding: UTF-8
+URL: https://github.com/ycli1995/hdf5r.Extra
+BugReports: https://github.com/ycli1995/hdf5r.Extra/issues
+LazyData: true
