@@ -73,17 +73,7 @@ h5Write(x, file, name, ...)
 a 2-dimension array-like object.}
 
 \item{block_size}{Default size for number of columns when \code{transpose} 
-is \code{TRUE}. 
-
-# matrix -----------------------
-x <- h5Read(file, "X")
-h5Write(x, tmp.file, "X")
-x2 <- h5Read(tmp.file, "X")
-stopifnot(identical(x, x2))
-
-h5Write(x, tmp.file, "X2", transpose = TRUE)
-x2 <- h5Read(tmp.file, "X2")
-stopifnot(identical(t(x), x2))}
+is \code{TRUE}.}
 
 \item{ordered}{When writing a factor, whether or not the categories are 
 ordered.}
@@ -102,6 +92,7 @@ By default, \code{h5Write} will try to transform any S4 object \code{x} into
 combination of base R objects using \code{\link{h5Prep}} before writting it.
 }
 \examples{
+\dontrun{
 file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
 tmp.file <- tempfile(fileext = ".h5")
 h5CreateFile(tmp.file)
@@ -111,7 +102,21 @@ x <- h5Read(file, "/raw/X/data")
 h5Write(x, tmp.file, "raw/X/data")
 x2 <- h5Read(tmp.file, "raw/X/data")
 stopifnot(identical(x, x2))
+}
 
+\dontrun{
+# matrix -----------------------
+x <- h5Read(file, "X")
+h5Write(x, tmp.file, "X")
+x2 <- h5Read(tmp.file, "X")
+stopifnot(identical(x, x2))
+
+h5Write(x, tmp.file, "X2", transpose = TRUE)
+x2 <- h5Read(tmp.file, "X2")
+stopifnot(identical(t(x), x2))
+}
+
+\dontrun{
 # data.frame -----------------------
 x <- h5Read(file, "obs")
 h5Write(x, tmp.file, "obs")
@@ -122,17 +127,22 @@ x <- h5Read(file, "raw/var") # data.frame with empty column
 h5Write(x, tmp.file, "raw/var")
 x2 <- h5Read(tmp.file, "raw/var")
 stopifnot(identical(x, x2))
+}
 
+\dontrun{
 # dgCMatrix -----------------------
 x <- h5Read(file, "raw/X")
 h5Write(x, tmp.file, "raw/X", overwrite = TRUE)
 x2 <- h5Read(tmp.file, "raw/X")
 stopifnot(identical(x, x2))
+}
 
+\dontrun{
 # list -----------------------
 x <- h5Read(file)
 h5Write(x, tmp.file, name = NULL, overwrite = TRUE)
 x2 <- h5Read(tmp.file)
 stopifnot(identical(x, x2))
+}
 
 }

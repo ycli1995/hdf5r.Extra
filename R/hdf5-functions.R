@@ -176,11 +176,8 @@ NULL
 #' @export
 #' @rdname h5Class
 h5Class <- function(file, name) {
-  name <- h5AbsLinkName(name = name)
-  h5fh <- H5File$new(filename = file, mode = "r")
-  on.exit(expr = h5fh$close())
-  h5obj <- h5fh$open(name = name)
-  on.exit(expr = h5obj$close(), add = TRUE)
+  h5obj <- h5Open(x = file, name = name, mode = "r")
+  on.exit(expr = h5obj$close())
   cls <- class(x = h5obj)
   return(cls[1])
 }
@@ -237,6 +234,8 @@ is.H5Group <- function(file, name) {
 #' h5Copy(file, "obsm/tsne", to.file, "obsm/tsne")
 #' obsm <- h5Read(to.file, "obsm")
 #' 
+#' h5Copy(file, "/", to.file, "/")
+#' 
 #' @export
 h5Copy <- function(
     from.file,
@@ -251,65 +250,25 @@ h5Copy <- function(
   from.name <- h5AbsLinkName(name = from.name)
   to.file <- normalizePath(path = to.file, mustWork = FALSE)
   to.name <- h5AbsLinkName(name = to.name)
-  
   if (identical(x = from.file, y = to.file)) {
-    if (identical(x = from.name, y = to.name)) {
-      warning(
-        "The source and the destination are identical. No copy will be done.",
-        immediate. = TRUE
-      )
-      return(invisible(x = NULL))
-    }
-    h5fh <- h5TryOpen(filename = from.file, mode = "r+")
-    to.h5fh <- h5fh
-  } else {
-    h5fh <- h5TryOpen(filename = from.file, mode = "r")
-    to.h5fh <- h5TryOpen(filename = to.file, mode = "a")
+    return(.h5copy_same_file(
+      h5.file = from.file, 
+      from.name = from.name, 
+      to.name = to.name, 
+      overwrite = overwrite, 
+      verbose = verbose,
+      ...
+    ))
   }
-  on.exit(expr = h5fh$close())
-  on.exit(expr = to.h5fh$close(), add = TRUE)
-  if (!h5Exists(x = h5fh, name = from.name)) {
-    stop("Source H5 link '", from.name, "' doesn't exist")
-  }
-  if (h5Exists(x = to.h5fh, name = to.name)) {
-    if (!overwrite) {
-      warning(
-        "'", to.name, "' already exists in file '", to.file, "'.\n", 
-        "You need to set 'overwrite' to TRUE",
-        immediate. = TRUE
-      )
-      return(invisible(x = NULL))
-    }
-    if (verbose) {
-      message("Delete the original '", to.name, "' in '", to.file, "'")
-    }
-    to.h5fh$link_delete(name = to.name)
-  }
-  if (verbose) {
-    message(
-      "Copy '", from.name, "' from file '", from.file, "' to '",
-      to.name, "' in file '", to.file, "'"
-    )
-  }
-  h5CreateGroup(
-    x = to.h5fh, 
-    name = dirname(path = to.name), 
-    show.warnings = FALSE
-  )
-  to.h5fh$obj_copy_from(
-    src_loc = h5fh, 
-    src_name = from.name, 
-    dst_name = to.name, 
-    ...
-  )
-  .h5attr_copy_all(
-    from.h5fh = h5fh,
+  return(.h5copy_different_file(
+    from.file = from.file,
     from.name = from.name,
-    to.h5fh = to.h5fh,
+    to.file = to.file,
     to.name = to.name,
-    overwrite = TRUE
-  )
-  return(invisible(x = NULL))
+    overwrite = overwrite,
+    verbose = verbose,
+    ...
+  ))
 }
 
 #' Move link in an HDF5 file

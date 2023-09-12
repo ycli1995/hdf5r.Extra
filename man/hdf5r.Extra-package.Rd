@@ -4,9 +4,9 @@
 \name{hdf5r.Extra-package}
 \alias{hdf5r.Extra}
 \alias{hdf5r.Extra-package}
-\title{hdf5r.Extra: Extensions for HDF5 R Interfaces}
+\title{hdf5r.Extra: Extensions for 'HDF5' R Interfaces}
 \description{
-This package contains some methods to manipulate HDF5 files, extending the 'hdf5r' package. Reading and writing R objects to HDF5 formats follow the spcification of AnnData \url{https://anndata.readthedocs.io/en/latest/fileformat-prose.html}.
+Some methods to manipulate 'HDF5' files, extending the 'hdf5r' package. Reading and writing R objects to 'HDF5' formats follow the specification of 'AnnData' \url{https://anndata.readthedocs.io/en/latest/fileformat-prose.html}.
 }
 \seealso{
 Useful links:

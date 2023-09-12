@@ -23,6 +23,9 @@ NULL
 #' @export
 #' @method h5Exists H5Group
 h5Exists.H5Group <- function(x, name, ...) {
+  if (identical(x = name, y = "/")) {
+    return(TRUE)
+  }
   return(tryCatch(
     expr = x$exists(name = name, ...),
     error = function(e) FALSE
@@ -34,6 +37,9 @@ h5Exists.H5Group <- function(x, name, ...) {
 #' @method h5Exists H5File
 h5Exists.H5File <- function(x, name, ...) {
   name <- h5AbsLinkName(name = name)
+  if (identical(x = name, y = "/")) {
+    return(TRUE)
+  }
   return(tryCatch(
     expr = x$exists(name = name, ...),
     error = function(e) FALSE
@@ -103,8 +109,10 @@ h5Dims.H5D <- function(x, ...) {
 #' @rdname H5-dataset-info
 #' @method h5Dims H5Group
 h5Dims.H5Group <- function(x, name, ...) {
-  h5d <- x$open(name = name)
-  on.exit(expr = h5d$close())
+  h5d <- h5Open(x = x, name = name)
+  if (!identical(x = h5d, y = x)) {
+    on.exit(expr = h5d$close())
+  }
   return(h5d$dims)
 }
 
@@ -113,8 +121,10 @@ h5Dims.H5Group <- function(x, name, ...) {
 #' @method h5Dims H5File
 h5Dims.H5File <- function(x, name, ...) {
   name <- h5AbsLinkName(name = name)
-  h5d <- x$open(name = name)
-  on.exit(expr = h5d$close())
+  h5d <- h5Open(x = x, name = name)
+  if (!identical(x = h5d, y = x)) {
+    on.exit(expr = h5d$close())
+  }
   return(h5d$dims)
 }
 
@@ -152,8 +162,10 @@ h5MaxDims.H5D <- function(x, ...) {
 #' @rdname H5-dataset-info
 #' @method h5MaxDims H5Group
 h5MaxDims.H5Group <- function(x, name, ...) {
-  h5d <- x$open(name = name)
-  on.exit(expr = h5d$close())
+  h5d <- h5Open(x = x, name = name)
+  if (!identical(x = h5d, y = x)) {
+    on.exit(expr = h5d$close())
+  }
   return(h5d$maxdims)
 }
 
@@ -162,8 +174,10 @@ h5MaxDims.H5Group <- function(x, name, ...) {
 #' @method h5MaxDims H5File
 h5MaxDims.H5File <- function(x, name, ...) {
   name <- h5AbsLinkName(name = name)
-  h5d <- x$open(name = name)
-  on.exit(expr = h5d$close())
+  h5d <- h5Open(x = x, name = name)
+  if (!identical(x = h5d, y = x)) {
+    on.exit(expr = h5d$close())
+  }
   return(h5d$maxdims)
 }
 
@@ -201,19 +215,17 @@ h5List.H5Group <- function(
     detailed = FALSE,
     ...
 ) {
-  df <- x$ls(recursive = recursive, detailed = detailed, ...)
-  if (full.names) {
-    df$name <- paste0(x$get_obj_name(), "/", df$name)
-    df$name <- gsub(pattern = "^/+", replacement = "/", x = df$name)
-  }
-  if (simplify) {
-    return(df$name)
-  }
-  return(df)
+  return(.h5list(
+    h5obj = x, 
+    recursive = recursive, 
+    full.names = full.names, 
+    simplify = simplify,
+    detailed = detailed, 
+    ...
+  ))
 }
 
-#' @param name description A link in file. Must refer to an H5Group. 
-#' Default: "/"
+#' @param name A link in file. Must refer to an H5Group. Default is "/".
 #' 
 #' @export
 #' @rdname h5List
@@ -228,13 +240,12 @@ h5List.H5File <- function(
     ...
 ) {
   name <- h5AbsLinkName(name = name)
-  h5g <- x$open(name = name)
-  on.exit(expr = h5g$close())
-  if (!inherits(x = h5g, what = "H5Group")) {
-    stop("'", name, "' is not an H5Group")
+  h5g <- h5Open(x = x, name = name)
+  if (!identical(x = h5g, y = x)) {
+    on.exit(expr = h5g$close())
   }
-  return(h5List(
-    x = h5g, 
+  return(.h5list(
+    h5obj = h5g, 
     recursive = recursive, 
     full.names = full.names, 
     simplify = simplify,
@@ -303,27 +314,12 @@ h5CreateFile.character <- function(x, ...) {
 #' @rdname h5CreateGroup
 #' @method h5CreateGroup H5Group
 h5CreateGroup.H5Group <- function(x, name, show.warnings = TRUE, ...) {
-  name <- unlist(x = strsplit(x = name, split = '/', fixed = TRUE))
-  name <- Filter(f = nchar, x = name)
-  if (length(x = name) == 0) {
-    return(invisible(x = NULL))
-  }
-  path <- "."
-  for (i in name) {
-    path <- paste0(path, "/", i)
-    if (!x$exists(name = path)) {
-      h5g <- x$create_group(name = path, ...)
-      h5g$close()
-      next
-    }
-    if (show.warnings) {
-      warning(
-        "'", path, "' already exists in '", x$get_obj_name(), "'.", 
-        immediate. = TRUE
-      )
-    }
-  }
-  return(invisible(x = NULL))
+  return(.h5group_create_group(
+    h5group = x, 
+    name = name, 
+    show.warnings = show.warnings, 
+    ...
+  ))
 }
 
 #' @export
@@ -331,10 +327,12 @@ h5CreateGroup.H5Group <- function(x, name, show.warnings = TRUE, ...) {
 #' @method h5CreateGroup H5File
 h5CreateGroup.H5File <- function(x, name, show.warnings = TRUE, ...) {
   name <- h5AbsLinkName(name = name)
-  h5g <- x$open(name = "/")
-  on.exit(expr = h5g$close())
-  h5CreateGroup(x = h5g, name = name, ...)
-  return(invisible(x = NULL))
+  return(.h5group_create_group(
+    h5group = x, 
+    name = name, 
+    show.warnings = show.warnings, 
+    ...
+  ))
 }
 
 #' @examples
@@ -377,7 +375,6 @@ h5CreateGroup.character <- function(x, name, show.warnings = TRUE, ...) {
 #' @param ... Arguments passed to \code{H5File$create_dataset()}. Also see 
 #' \code{[hdf5r:H5File-class]{H5File}}.
 #' 
-#' @importFrom hdf5r guess_chunks H5P_DATASET_CREATE H5S
 #' @export
 #' @rdname h5CreateDataset
 #' @method h5CreateDataset H5Group
@@ -394,36 +391,18 @@ h5CreateDataset.H5Group <- function(
     ...
 ) {
   stype <- match.arg(arg = stype)
-  dtype <- dtype %||% h5GuessDtype(x = storage.mode, stype = stype)
-  if (!inherits(x = dtype, what = "H5T")) {
-    stop("'dtype' must be an 'H5T'")
-  }
-  maxdims <- maxdims %||% dims
-  h5space <- H5S$new(dims = dims, maxdims = maxdims)
-  on.exit(expr = h5space$close(), add = TRUE)
-  h5d_create_pl <- H5P_DATASET_CREATE$new()
-  on.exit(expr = h5d_create_pl$close(), add = TRUE)
-  if (gzip_level > 0) {
-    h5d_create_pl$set_shuffle()
-  }
-  if (any(chunk_size %in% "auto")) {
-    chunk_size <- guess_chunks(
-      space_maxdims = maxdims,
-      dtype_size = dtype$get_size(variable_as_inf = FALSE)
-    )
-  }
-  h5CreateGroup(x = x, name = dirname(path = name), show.warnings = FALSE)
-  h5dataset <- x$create_dataset(
+  return(.h5group_create_dataset(
+    h5group = x, 
     name = name, 
+    dims = dims,
     dtype = dtype,
-    space = h5space,
-    dataset_create_pl = h5d_create_pl, 
-    chunk_dims = chunk_size,
+    storage.mode = storage.mode,
+    stype = stype,
+    maxdims = maxdims,
+    chunk_size = chunk_size,
     gzip_level = gzip_level,
     ...
-  )
-  on.exit(expr = h5dataset$close(), add = TRUE)
-  return(invisible(x = NULL))
+  ))
 }
 
 #' @export
@@ -443,10 +422,8 @@ h5CreateDataset.H5File <- function(
 ) {
   stype <- match.arg(arg = stype)
   name <- h5AbsLinkName(name = name)
-  h5g <- x$open(name = "/")
-  on.exit(expr = h5g$close())
-  return(h5CreateDataset(
-    x = h5g, 
+  return(.h5group_create_dataset(
+    h5group = x, 
     name = name, 
     dims = dims,
     dtype = dtype,
@@ -511,6 +488,9 @@ h5CreateDataset.character <- function(
 #' @rdname h5Open
 #' @method h5Open H5Group
 h5Open.H5Group <- function(x, name, ...) {
+  if (identical(x = name, y = "/")) {
+    return(x)
+  }
   return(x$open(name = name, ...))
 }
 
@@ -519,6 +499,9 @@ h5Open.H5Group <- function(x, name, ...) {
 #' @method h5Open H5File
 h5Open.H5File <- function(x, name, ...) {
   name <- h5AbsLinkName(name = name)
+  if (identical(x = name, y = "/")) {
+    return(x)
+  }
   return(x$open(name = name, ...))
 }
 
@@ -563,20 +546,25 @@ h5Attr.H5D <- function(x, which, ...) {
 #' @method h5Attr H5Group
 h5Attr.H5Group <- function(x, which, name = NULL, ...) {
   if (!is.null(x = name)) {
-    h5obj <- x$open(name = name)
-    on.exit(expr = h5obj$close())
+    h5obj <- h5Open(x = x, name = name)
+    if (!identical(x = h5obj, y = x)) {
+      on.exit(expr = h5obj$close())
+    }
     return(.h5attr(h5obj = h5obj, which = which, ...))
   }
   return(.h5attr(h5obj = x, which = which, ...))
 }
 
+#' @importFrom hdf5r H5Group
 #' @export
 #' @rdname H5-attributs
 #' @method h5Attr H5File
 h5Attr.H5File <- function(x, which, name = NULL, ...) {
   name <- h5AbsLinkName(name = name)
-  h5obj <- x$open(name = name)
-  on.exit(expr = h5obj$close())
+  h5obj <- h5Open(x = x, name = name)
+  if (!identical(x = h5obj, y = x)) {
+    on.exit(expr = h5obj$close())
+  }
   return(.h5attr(h5obj = h5obj, which = which, ...))
 }
 
@@ -610,23 +598,27 @@ h5Attr.character <- function(x, which, name = NULL, ...) {
   return(h5Attr(x = h5fh, which = which, name = name, ...))
 }
 
+#' @importFrom hdf5r h5attr_names
 #' @export
 #' @rdname H5-attributs
 #' @method h5AttrNames H5D
 h5AttrNames.H5D <- function(x, ...) {
-  return(.h5attr_names(h5obj = x, ...))
+  return(h5attr_names(x = x))
 }
 
+#' @importFrom hdf5r h5attr_names
 #' @export
 #' @rdname H5-attributs
 #' @method h5AttrNames H5Group
 h5AttrNames.H5Group <- function(x, name = NULL, ...) {
   if (!is.null(x = name)) {
-    h5obj <- x$open(name = name)
-    on.exit(expr = h5obj$close())
-    return(.h5attr_names(h5obj = h5obj, ...))
+    h5obj <- h5Open(x = x, name = name)
+    if (!identical(x = h5obj, y = x)) {
+      on.exit(expr = h5obj$close())
+    }
+    return(h5attr_names(x = h5obj, ...))
   }
-  return(.h5attr_names(h5obj = x, ...))
+  return(h5attr_names(x = x))
 }
 
 #' @export
@@ -634,9 +626,11 @@ h5AttrNames.H5Group <- function(x, name = NULL, ...) {
 #' @method h5AttrNames H5File
 h5AttrNames.H5File <- function(x, name = NULL, ...) {
   name <- h5AbsLinkName(name = name)
-  h5obj <- x$open(name = name)
-  on.exit(expr = h5obj$close())
-  return(.h5attr_names(h5obj = h5obj, ...))
+  h5obj <- h5Open(x = x, name = name)
+  if (!identical(x = h5obj, y = x)) {
+    on.exit(expr = h5obj$close())
+  }
+  return(h5attr_names(x = h5obj))
 }
 
 #' @return 
@@ -670,8 +664,10 @@ h5Attributes.H5D <- function(x, ...) {
 #' @method h5Attributes H5Group
 h5Attributes.H5Group <- function(x, name = NULL, ...) {
   if (!is.null(x = name)) {
-    h5obj <- x$open(name = name)
-    on.exit(expr = h5obj$close())
+    h5obj <- h5Open(x = x, name = name)
+    if (!identical(x = h5obj, y = x)) {
+      on.exit(expr = h5obj$close())
+    }
     return(.h5attributes(h5obj = h5obj, ...))
   }
   return(.h5attributes(h5obj = x, ...))
@@ -682,8 +678,10 @@ h5Attributes.H5Group <- function(x, name = NULL, ...) {
 #' @method h5Attributes H5File
 h5Attributes.H5File <- function(x, name = NULL, ...) {
   name <- h5AbsLinkName(name = name)
-  h5obj <- x$open(name = name)
-  on.exit(expr = h5obj$close())
+  h5obj <- h5Open(x = x, name = name)
+  if (!identical(x = h5obj, y = x)) {
+    on.exit(expr = h5obj$close())
+  }
   return(.h5attributes(h5obj = h5obj, ...))
 }
 
@@ -748,8 +746,10 @@ h5WriteAttr.H5Group <- function(
     ...
 ) {
   if (!is.null(x = name)) {
-    h5obj <- x$open(name = name)
-    on.exit(expr = h5obj$close())
+    h5obj <- h5Open(x = x, name = name)
+    if (!identical(x = h5obj, y = x)) {
+      on.exit(expr = h5obj$close())
+    }
     return(.h5attr_write(
       h5obj = h5obj, 
       which = which, 
@@ -771,6 +771,7 @@ h5WriteAttr.H5Group <- function(
   ))
 }
 
+#' @importFrom hdf5r H5File
 #' @export
 #' @rdname H5-attributs
 #' @method h5WriteAttr H5File
@@ -785,8 +786,10 @@ h5WriteAttr.H5File <- function(
     ...
 ) {
   name <- h5AbsLinkName(name = name)
-  h5obj <- x$open(name = name)
-  on.exit(expr = h5obj$close())
+  h5obj <- h5Open(x = x, name = name)
+  if (!inherits(x = h5obj, what = "H5File")) {
+    on.exit(expr = h5obj$close())
+  }
   return(.h5attr_write(
     h5obj = h5obj, 
     which = which, 
@@ -848,8 +851,10 @@ h5DeleteAttr.H5D <- function(x, which, ...) {
 #' @method h5DeleteAttr H5Group
 h5DeleteAttr.H5Group <- function(x, which, name = NULL, ...) {
   if (!is.null(x = name)) {
-    h5obj <- x$open(name = name)
-    on.exit(expr = h5obj$close())
+    h5obj <- h5Open(x = x, name = name)
+    if (!identical(x = h5obj, y = x)) {
+      on.exit(expr = h5obj$close())
+    }
     return(.h5attr_delete(h5obj = h5obj, which = which, ...))
   }
   return(.h5attr_delete(h5obj = x, which = which, ...))
@@ -860,8 +865,10 @@ h5DeleteAttr.H5Group <- function(x, which, name = NULL, ...) {
 #' @method h5DeleteAttr H5File
 h5DeleteAttr.H5File <- function(x, which, name = NULL, ...) {
   name <- h5AbsLinkName(name = name)
-  h5obj <- x$open(name = name)
-  on.exit(expr = h5obj$close())
+  h5obj <- h5Open(x = x, name = name)
+  if (!identical(x = h5obj, y = x)) {
+    on.exit(expr = h5obj$close())
+  }
   return(.h5attr_delete(h5obj = h5obj, which = which, ...))
 }
 
@@ -882,13 +889,7 @@ h5DeleteAttr.character <- function(x, which, name = NULL, ...) {
 ## Read and write HDF5 data ====================================================
 
 #' @param stype 'utf8' or 'ascii7'. Passed to \code{\link{h5GuessDtype}}.
-#' @param shuffle Whether or not to \code{set_shuffle()} when create the 
-#' dataset. See \code{[hdf5r:H5P_DATASET_CREATE-class]{H5P_DATASET_CREATE}}
-#' @param gzip_level Enable zipping at the level given here. Only if chunk_dims 
-#' is not \code{NULL}.
 #' 
-#' @importFrom hdf5r H5P_DATASET_CREATE H5S
-#' @importFrom checkmate assert_scalar
 #' @export
 #' @rdname h5WriteScalar
 #' @method h5WriteScalar H5Group
@@ -897,54 +898,16 @@ h5WriteScalar.H5Group <- function(
     name, 
     robj, 
     stype = c('utf8', 'ascii7'),
-    shuffle = TRUE, 
-    gzip_level = 6, 
     ...
 ) {
   stype <- match.arg(arg = stype)
-  assert_scalar(x = robj)
-  dtype <- h5GuessDtype(x = robj, stype = stype)
-  
-  h5CreateGroup(x = x, name = dirname(path = name))
-  
-  h5space <- H5S$new(type = "scalar")
-  on.exit(expr = h5space$close(), add = TRUE)
-  h5d_create_pl <- H5P_DATASET_CREATE$new()
-  on.exit(expr = h5d_create_pl$close(), add = TRUE)
-  if (shuffle) {
-    h5d_create_pl$set_shuffle()
-  }
-  
-  h5d <- x$create_dataset(
+  return(.h5group_write_scalar(
+    h5group = x, 
     name = name, 
-    dtype = dtype,
-    space = h5space,
-    dataset_create_pl = h5d_create_pl, 
-    gzip_level = gzip_level,
-    chunk_dims = NULL,
+    robj = robj, 
+    stype = stype,
     ...
-  )
-  on.exit(expr = h5d$close(), add = TRUE)
-  h5d$write(args = NULL, value = robj)
-  
-  ## Add encoding informations for scalar
-  .h5attr_write(
-    h5obj = h5d, 
-    which = "encoding-version", 
-    robj = "0.2.0", 
-    overwrite = FALSE
-  )
-  encoding_type <- "numeric-scalar"
-  if (is.character(x = x)) {
-    encoding_type <- "string"
-  }
-  .h5attr_write(
-    h5obj = h5d, 
-    which = "encoding-type", 
-    robj = encoding_type, 
-    overwrite = FALSE
-  )
-  return(invisible(x = NULL))
+  ))
 }
 
 #' @export
@@ -952,9 +915,12 @@ h5WriteScalar.H5Group <- function(
 #' @method h5WriteScalar H5File
 h5WriteScalar.H5File <- function(x, name, robj, ...) {
   name <- h5AbsLinkName(name = name)
-  h5obj <- x$open(name = "/")
-  on.exit(expr = h5obj$close())
-  return(h5WriteScalar(x = h5obj, name = name,  robj = robj, ...))
+  return(.h5group_write_scalar(
+    h5group = x, 
+    name = name, 
+    robj = robj, 
+    ...
+  ))
 }
 
 #' @param overwrite Whether or not to overwrite the existing \code{name}.
@@ -1065,16 +1031,12 @@ h5WriteDataset.H5Group <- function(
     verbose = TRUE,
     ...
 ) {
-  h5obj <- x$open(name = name)
-  on.exit(expr = h5obj$close())
-  if (!inherits(x = h5obj, "H5D")) {
-    stop("'", h5obj$get_obj_name(), "' is not an H5D")
-  }
-  return(h5WriteDataset(
-    x = h5obj,
+  return(.h5group_write_dataset(
+    h5group = x,
     robj = robj,
+    name = name,
     idx_list = idx_list,
-    transpose = transpose, 
+    transpose = transpose,
     block_size = block_size,
     verbose = verbose,
     ...
@@ -1095,16 +1057,12 @@ h5WriteDataset.H5File <- function(
     ...
 ) {
   name <- h5AbsLinkName(name = name)
-  h5obj <- x$open(name = name)
-  on.exit(expr = h5obj$close())
-  if (!inherits(x = h5obj, "H5D")) {
-    stop("'", h5obj$get_obj_name(), "' is not an H5D")
-  }
-  return(h5WriteDataset(
-    x = h5obj,
+  return(.h5group_write_dataset(
+    h5group = x,
     robj = robj,
+    name = name,
     idx_list = idx_list,
-    transpose = transpose, 
+    transpose = transpose,
     block_size = block_size,
     verbose = verbose,
     ...
@@ -1277,15 +1235,11 @@ h5ReadDataset.H5Group <- function(
     transpose = FALSE, 
     ...
 ) {
-  h5obj <- x$open(name = name)
-  on.exit(expr = h5obj$close())
-  if (!inherits(x = h5obj, what = "H5D")) {
-    stop("'x[[", name, "]]' is not an H5D")
-  }
-  return(h5ReadDataset(
-    x = h5obj, 
-    transpose = transpose, 
+  return(.h5group_read_dataset(
+    h5group = x, 
+    name = name, 
     idx_list = idx_list, 
+    transpose = transpose, 
     ...
   ))
 }
@@ -1301,15 +1255,11 @@ h5ReadDataset.H5File <- function(
     ...
 ) {
   name <- h5AbsLinkName(name = name)
-  h5obj <- x$open(name = name)
-  on.exit(expr = h5obj$close())
-  if (!inherits(x = h5obj, what = "H5D")) {
-    stop("'x[[", name, "]]' is not an H5D")
-  }
-  return(h5ReadDataset(
-    x = h5obj, 
-    transpose = transpose, 
+  return(.h5group_read_dataset(
+    h5group = x, 
+    name = name, 
     idx_list = idx_list, 
+    transpose = transpose, 
     ...
   ))
 }
@@ -1363,33 +1313,13 @@ h5Read.H5Group <- function(
     toS4.func = NULL, 
     ...
 ) {
-  if (!is.null(x = name)) {
-    h5obj <- x$open(name = name)
-    on.exit(expr = h5obj$close())
-    if (inherits(x = h5obj, what = "H5D")) {
-      return(h5ReadDataset(x = h5obj, transpose = transpose))
-    }
-    return(h5Read(x = h5obj, transpose = transpose, toS4.func = toS4.func, ...))
-  }
-  encoding_type <- h5Attr(x = x, which = "encoding-type")
-  encoding_type <- encoding_type %||% ""
-  r_obj <- switch(
-    EXPR = encoding_type,
-    "categorical" = .h5read_factor(h5obj = x),
-    "dataframe" = .h5read_dataframe(h5obj = x),
-    "csr_matrix" = .h5read_sparse(h5obj = x, transpose = transpose),
-    "csc_matrix" = .h5read_sparse(h5obj = x, transpose = transpose),
-    "nullable-boolean" = .h5read_nullable(h5obj),
-    "nullable-integer" = .h5read_nullable(h5obj),
-    .h5read_list(h5obj = x, transpose = transpose, ...)
-  )
-  if (is.null(x = toS4.func)) {
-    return(r_obj)
-  }
-  if (!is.function(x = toS4.func)) {
-    stop("'toS4.func' must be NULL or a function.")
-  }
-  return(toS4.func(r_obj))
+  return(.h5group_read(
+    h5group = x, 
+    name = name, 
+    transpose = transpose, 
+    toS4.func = toS4.func, 
+    ...
+  ))
 }
 
 #' @export
@@ -1403,14 +1333,12 @@ h5Read.H5File <- function(
     ...
 ) {
   name <- h5AbsLinkName(name = name)
-  h5obj <- x$open(name = name)
-  on.exit(expr = h5obj$close())
-  if (inherits(x = h5obj, what = "H5D")) {
-    return(h5ReadDataset(x = h5obj, transpose = transpose))
+  if (identical(x = name, y = "/")) {
+    name <- NULL
   }
-  return(h5Read(
-    x = h5obj, 
-    name = NULL, 
+  return(.h5group_read(
+    h5group = x, 
+    name = name, 
     transpose = transpose, 
     toS4.func = toS4.func, 
     ...
@@ -1479,6 +1407,7 @@ h5Prep.default <- function(x, ...) {
 #' combination of base R objects using \code{\link{h5Prep}} before writting it.
 #' 
 #' @examples
+#' \dontrun{
 #' file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
 #' tmp.file <- tempfile(fileext = ".h5")
 #' h5CreateFile(tmp.file)
@@ -1488,6 +1417,7 @@ h5Prep.default <- function(x, ...) {
 #' h5Write(x, tmp.file, "raw/X/data")
 #' x2 <- h5Read(tmp.file, "raw/X/data")
 #' stopifnot(identical(x, x2))
+#' }
 #' 
 #' @export
 #' @rdname h5Write
@@ -1547,6 +1477,8 @@ h5Write.default <- function(
 #' @param block_size Default size for number of columns when \code{transpose} 
 #' is \code{TRUE}. 
 #' 
+#' @examples
+#' \dontrun{
 #' # matrix -----------------------
 #' x <- h5Read(file, "X")
 #' h5Write(x, tmp.file, "X")
@@ -1556,6 +1488,7 @@ h5Write.default <- function(
 #' h5Write(x, tmp.file, "X2", transpose = TRUE)
 #' x2 <- h5Read(tmp.file, "X2")
 #' stopifnot(identical(t(x), x2))
+#' }
 #' 
 #' @export
 #' @rdname h5Write
@@ -1634,6 +1567,7 @@ h5Write.factor <- function(
 }
 
 #' @examples
+#' \dontrun{
 #' # data.frame -----------------------
 #' x <- h5Read(file, "obs")
 #' h5Write(x, tmp.file, "obs")
@@ -1644,6 +1578,7 @@ h5Write.factor <- function(
 #' h5Write(x, tmp.file, "raw/var")
 #' x2 <- h5Read(tmp.file, "raw/var")
 #' stopifnot(identical(x, x2))
+#' }
 #' 
 #' @export
 #' @rdname h5Write
@@ -1678,11 +1613,13 @@ h5Write.data.frame <- function(
 #' write the dimension names.
 #' 
 #' @examples
+#' \dontrun{
 #' # dgCMatrix -----------------------
 #' x <- h5Read(file, "raw/X")
 #' h5Write(x, tmp.file, "raw/X", overwrite = TRUE)
 #' x2 <- h5Read(tmp.file, "raw/X")
 #' stopifnot(identical(x, x2))
+#' }
 #' 
 #' @importMethodsFrom Matrix t
 #' @export
@@ -1760,11 +1697,13 @@ h5Write.dgRMatrix <- function(
 
 
 #' @examples
+#' \dontrun{
 #' # list -----------------------
 #' x <- h5Read(file)
 #' h5Write(x, tmp.file, name = NULL, overwrite = TRUE)
 #' x2 <- h5Read(tmp.file)
 #' stopifnot(identical(x, x2))
+#' }
 #' 
 #' @export
 #' @rdname h5Write

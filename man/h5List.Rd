@@ -53,8 +53,7 @@ listed.}
 
 \item{detailed}{Whether or not to show the detailed information.}
 
-\item{name}{description A link in file. Must refer to an H5Group. 
-Default: "/"}
+\item{name}{A link in file. Must refer to an H5Group. Default is "/".}
 }
 \value{
 If \code{simplify}, will return a character vector specifying names of H5 

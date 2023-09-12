@@ -1,10 +1,7 @@
 
 .h5_is_a <- function(file, name, what) {
-  name <- h5AbsLinkName(name = name)
-  h5fh <- h5TryOpen(filename = file, mode = "r")
-  on.exit(expr = h5fh$close())
-  h5obj <- h5fh$open(name = name)
-  on.exit(expr = h5obj$close(), add = TRUE)
+  h5obj <- h5Open(x = file, name = name, mode = "r")
+  on.exit(expr = h5obj$close())
   return(inherits(x = h5obj, what = what))
 }
 
@@ -42,17 +39,9 @@
   return(tryCatch(expr = attr_obj$read(...), error = function(e) NULL))
 }
 
-.h5attr_names <- function(h5obj, ...) {
-  num_attrs <- h5obj$attr_get_number()
-  attr_names <- character(length = num_attrs)
-  for (i in seq_along(along.with = attr_names)) {
-    attr_names[i] <- h5obj$attr_name_by_idx(n = i - 1, obj_name = ".", ...)
-  }
-  return(attr_names)
-}
-
+#' @importFrom hdf5r h5attr_names
 .h5attributes <- function(h5obj, ...) {
-  attr_names <- .h5attr_names(h5obj = h5obj)
+  attr_names <- h5attr_names(x = h5obj)
   attr_data <- vector(mode = "list", length = length(x = attr_names))
   names(x = attr_data) <- attr_names
   for (i in names(x = attr_data)) {
@@ -172,6 +161,7 @@
   return(invisible(x = NULL))
 }
 
+#' @importFrom hdf5r h5attr_names
 .h5attr_copy_all <- function(
     from.h5fh,
     from.name,
@@ -179,11 +169,15 @@
     to.name,
     overwrite = TRUE
 ) {
-  from.h5obj <- from.h5fh$open(name = from.name)
-  on.exit(expr = from.h5obj$close())
-  to.h5obj <- to.h5fh$open(name = to.name)
-  on.exit(expr = to.h5obj$close(), add = TRUE)
-  all.attrs <- .h5attr_names(h5obj = from.h5obj)
+  from.h5obj <- h5Open(x = from.h5fh, name = from.name)
+  if (!identical(x = from.h5obj, y = from.h5fh)) {
+    on.exit(expr = from.h5obj$close())
+  }
+  to.h5obj <- h5Open(x = to.h5fh, name = to.name)
+  if (!identical(x = to.h5obj, y = to.h5fh)) {
+    on.exit(expr = to.h5obj$close(), add = TRUE)
+  }
+  all.attrs <- h5attr_names(x = from.h5obj)
   for (i in all.attrs) {
     .h5attr_copy(
       from.h5obj = from.h5obj,
@@ -193,6 +187,144 @@
       overwrite = overwrite
     )
   }
+  return(invisible(x = NULL))
+}
+
+## H5 copy or delete ===========================================================
+
+.h5copy_same_file <- function(
+    h5.file, 
+    from.name, 
+    to.name, 
+    overwrite = FALSE, 
+    verbose = TRUE,
+    ...
+) {
+  if (identical(x = from.name, y = to.name)) {
+    warning(
+      "The source and the destination are identical. No copy will be done.",
+      immediate. = TRUE
+    )
+    return(invisible(x = NULL))
+  }
+  if (identical(x = to.name, y = "/")) {
+    stop("Cannot copy '", from.name, "' to '/' in the same H5 file.")
+  }
+  h5fh <- h5TryOpen(filename = h5.file, mode = "r+")
+  on.exit(expr = h5fh$close())
+  if (h5Exists(x = h5fh, name = to.name)) {
+    if (!overwrite) {
+      warning(
+        "'", to.name, "' already exists in file '", h5.file, "'.\n", 
+        "You need to set 'overwrite' to TRUE",
+        immediate. = TRUE
+      )
+      return(invisible(x = NULL))
+    }
+    if (verbose) {
+      message("Delete the original '", to.name, "' in '", h5.file, "'")
+    }
+    h5fh$link_delete(name = to.name)
+  }
+  if (verbose) {
+    message(
+      "Copy '", from.name, "' to '", to.name, "' in file '", 
+      h5fh$get_filename(), "'"
+    )
+  }
+  h5CreateGroup(
+    x = h5fh, 
+    name = dirname(path = to.name), 
+    show.warnings = FALSE
+  )
+  h5fh$obj_copy_from(
+    src_loc = h5fh, 
+    src_name = from.name, 
+    dst_name = to.name, 
+    ...
+  )
+  .h5attr_copy_all(
+    from.h5fh = h5fh,
+    from.name = from.name,
+    to.h5fh = h5fh,
+    to.name = to.name,
+    overwrite = TRUE
+  )
+  return(invisible(x = NULL))
+}
+
+.h5copy_different_file <- function(
+    from.file,
+    from.name,
+    to.file,
+    to.name,
+    overwrite = FALSE,
+    verbose = TRUE,
+    ...
+) {
+  if (!identical(x = to.name, y = "/")) {
+    to.h5fh <- h5TryOpen(filename = to.file, mode = "a")
+    if (h5Exists(x = to.h5fh, name = to.name)) {
+      if (!overwrite) {
+        warning(
+          "'", to.name, "' already exists in file '", to.file, "'.\n", 
+          "You need to set 'overwrite' to TRUE",
+          immediate. = TRUE
+        )
+        return(invisible(x = NULL))
+      }
+      if (verbose) {
+        message("Delete the original '", to.name, "' in '", to.file, "'")
+      }
+      to.h5fh$link_delete(name = to.name)
+    }
+  } else {
+    if (file.exists(to.file) && !overwrite) {
+      warning(
+        "'", to.file, "' already exists. ",
+        "You need to set 'overwrite' to TRUE"
+      )
+      return(invisible(x = NULL))
+    }
+    if (identical(x = from.name, y = "/")) {
+      if (verbose) {
+        message("Copy ", from.file, " to ", to.file)
+      }
+      file.copy(from = from.file, to = to.file)
+      return(invisible(x = NULL))
+    }
+    to.h5fh <- h5TryOpen(filename = to.file, mode = "w")
+  }
+  on.exit(expr = to.h5fh$close())
+  h5fh <- h5TryOpen(filename = from.file, mode = "r")
+  on.exit(expr = h5fh$close(), add = TRUE)
+  if (!h5Exists(x = h5fh, name = from.name)) {
+    stop("Source H5 link '", from.name, "' doesn't exist")
+  }
+  if (verbose) {
+    message(
+      "Copy '", from.name, "' from file '", from.file, "' to '",
+      to.name, "' in file '", to.file, "'"
+    )
+  }
+  h5CreateGroup(
+    x = to.h5fh, 
+    name = dirname(path = to.name), 
+    show.warnings = FALSE
+  )
+  to.h5fh$obj_copy_from(
+    src_loc = h5fh, 
+    src_name = from.name, 
+    dst_name = to.name, 
+    ...
+  )
+  .h5attr_copy_all(
+    from.h5fh = h5fh,
+    from.name = from.name,
+    to.h5fh = to.h5fh,
+    to.name = to.name,
+    overwrite = TRUE
+  )
   return(invisible(x = NULL))
 }
 
@@ -207,6 +339,243 @@
   h5obj$link_delete(name = name, ...)
   return(invisible(x = NULL))
 }
+
+## H5 list =====================================================================
+.h5list <- function(
+    h5obj,
+    recursive = FALSE,
+    full.names = FALSE,
+    simplify = TRUE,
+    detailed = FALSE,
+    ...
+) {
+  df <- h5obj$ls(recursive = recursive, detailed = detailed, ...)
+  if (full.names) {
+    df$name <- paste0(h5obj$get_obj_name(), "/", df$name)
+    df$name <- gsub(pattern = "^/+", replacement = "/", x = df$name)
+  }
+  if (simplify) {
+    return(df$name)
+  }
+  return(df)
+}
+
+## H5 create group and dataset =================================================
+.h5group_create_group <- function(h5group, name, show.warnings = TRUE, ...) {
+  name <- unlist(x = strsplit(x = name, split = '/', fixed = TRUE))
+  name <- Filter(f = nchar, x = name)
+  if (length(x = name) == 0) {
+    return(invisible(x = NULL))
+  }
+  path <- "."
+  for (i in name) {
+    path <- paste0(path, "/", i)
+    if (!h5group$exists(name = path)) {
+      h5g <- h5group$create_group(name = path, ...)
+      h5g$close()
+      next
+    }
+    if (show.warnings) {
+      warning(
+        "'", path, "' already exists in '", h5group$get_obj_name(), "'.", 
+        immediate. = TRUE
+      )
+    }
+  }
+  return(invisible(x = NULL))
+}
+
+#' @importFrom hdf5r guess_chunks H5P_DATASET_CREATE H5S
+.h5group_create_dataset <- function(
+    h5group, 
+    name, 
+    dims,
+    dtype = NULL,
+    storage.mode = numeric(),
+    stype = c('utf8', 'ascii7'),
+    maxdims = NULL,
+    chunk_size = "auto",
+    gzip_level = 6,
+    ...
+) {
+  stype <- match.arg(arg = stype)
+  dtype <- dtype %||% h5GuessDtype(x = storage.mode, stype = stype)
+  if (!inherits(x = dtype, what = "H5T")) {
+    stop("'dtype' must be an 'H5T'")
+  }
+  maxdims <- maxdims %||% dims
+  h5space <- H5S$new(dims = dims, maxdims = maxdims)
+  on.exit(expr = h5space$close(), add = TRUE)
+  h5d_create_pl <- H5P_DATASET_CREATE$new()
+  on.exit(expr = h5d_create_pl$close(), add = TRUE)
+  if (gzip_level > 0) {
+    h5d_create_pl$set_shuffle()
+  }
+  if (any(chunk_size %in% "auto")) {
+    chunk_size <- guess_chunks(
+      space_maxdims = maxdims,
+      dtype_size = dtype$get_size(variable_as_inf = FALSE)
+    )
+  }
+  .h5group_create_group(
+    h5group = h5group, 
+    name = dirname(path = name), 
+    show.warnings = FALSE
+  )
+  h5dataset <- h5group$create_dataset(
+    name = name, 
+    dtype = dtype,
+    space = h5space,
+    dataset_create_pl = h5d_create_pl, 
+    chunk_dims = chunk_size,
+    gzip_level = gzip_level,
+    ...
+  )
+  on.exit(expr = h5dataset$close(), add = TRUE)
+  return(invisible(x = NULL))
+}
+
+#' @importFrom hdf5r H5P_DATASET_CREATE H5S
+#' @importFrom checkmate assert_scalar
+.h5group_write_scalar <- function(
+    h5group, 
+    name, 
+    robj, 
+    stype = c('utf8', 'ascii7'),
+    ...
+) {
+  stype <- match.arg(arg = stype)
+  assert_scalar(x = robj)
+  dtype <- h5GuessDtype(x = robj, stype = stype)
+  
+  .h5group_create_group(h5group = h5group, name = dirname(path = name))
+  
+  h5space <- H5S$new(type = "scalar")
+  on.exit(expr = h5space$close(), add = TRUE)
+  
+  h5d <- h5group$create_dataset(
+    name = name, 
+    dtype = dtype,
+    space = h5space,
+    chunk_dims = NULL,
+    ...
+  )
+  on.exit(expr = h5d$close(), add = TRUE)
+  h5d$write(args = NULL, value = robj)
+  
+  ## Add encoding informations for scalar
+  .h5attr_write(
+    h5obj = h5d, 
+    which = "encoding-version", 
+    robj = "0.2.0", 
+    overwrite = FALSE
+  )
+  encoding_type <- "numeric-scalar"
+  if (is.character(x = robj)) {
+    encoding_type <- "string"
+  }
+  .h5attr_write(
+    h5obj = h5d, 
+    which = "encoding-type", 
+    robj = encoding_type, 
+    overwrite = FALSE
+  )
+  return(invisible(x = NULL))
+}
+
+.h5group_write_dataset <- function(
+    h5group,
+    robj,
+    name,
+    idx_list = NULL,
+    transpose = FALSE,
+    block_size = 5000L,
+    verbose = TRUE,
+    ...
+) {
+  h5d <- h5Open(x = h5group, name = name)
+  if (!identical(x = h5d, y = h5group)) {
+    on.exit(expr = h5d$close())
+  }
+  if (!inherits(x = h5d, "H5D")) {
+    stop("'", h5d$get_obj_name(), "' is not an H5D")
+  }
+  return(h5WriteDataset(
+    x = h5d,
+    robj = robj,
+    idx_list = idx_list,
+    transpose = transpose, 
+    block_size = block_size,
+    verbose = verbose,
+    ...
+  ))
+}
+
+.h5group_read_dataset <- function(
+    h5group, 
+    name, 
+    idx_list = NULL, 
+    transpose = FALSE, 
+    ...
+) {
+  h5d <- h5Open(x = h5group, name = name)
+  if (!identical(x = h5d, y = h5group)) {
+    on.exit(expr = h5d$close())
+  }
+  if (!inherits(x = h5d, what = "H5D")) {
+    stop("'x[[", name, "]]' is not an H5D")
+  }
+  return(h5ReadDataset(
+    x = h5d, 
+    transpose = transpose, 
+    idx_list = idx_list, 
+    ...
+  ))
+}
+
+.h5group_read <- function(
+    h5group, 
+    name = NULL, 
+    transpose = FALSE, 
+    toS4.func = NULL, 
+    ...
+) {
+  if (!is.null(x = name)) {
+    h5obj <- h5Open(x = h5group, name = name)
+    if (!identical(x = h5obj, y = h5group)) {
+      on.exit(expr = h5obj$close())
+    }
+    if (inherits(x = h5obj, what = "H5D")) {
+      return(h5ReadDataset(x = h5obj, transpose = transpose))
+    }
+    return(h5Read(
+      x = h5obj, 
+      transpose = transpose, 
+      toS4.func = toS4.func, 
+      ...
+    ))
+  }
+  encoding_type <- h5Attr(x = h5group, which = "encoding-type")
+  encoding_type <- encoding_type %||% ""
+  r_obj <- switch(
+    EXPR = encoding_type,
+    "categorical" = .h5read_factor(h5obj = h5group),
+    "dataframe" = .h5read_dataframe(h5obj = h5group),
+    "csr_matrix" = .h5read_sparse(h5obj = h5group, transpose = transpose),
+    "csc_matrix" = .h5read_sparse(h5obj = h5group, transpose = transpose),
+    "nullable-boolean" = .h5read_nullable(h5obj = h5group),
+    "nullable-integer" = .h5read_nullable(h5obj = h5group),
+    .h5read_list(h5obj = h5group, transpose = transpose, ...)
+  )
+  if (is.null(x = toS4.func)) {
+    return(r_obj)
+  }
+  if (!is.function(x = toS4.func)) {
+    stop("'toS4.func' must be NULL or a function.")
+  }
+  return(toS4.func(r_obj))
+}
+
 
 ## Assertive helpers ===========================================================
 #' @importFrom hdf5r H5D
@@ -482,6 +851,7 @@
       dtype = h5GuessDtype(x = 0.1),
       space = h5space
     )
+    on.exit(expr = h5a$close(), add = TRUE)
     return(invisible(x = NULL))
   }
   for (i in colnames(x = robj)) {

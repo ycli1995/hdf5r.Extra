@@ -9,15 +9,7 @@
 \usage{
 h5WriteScalar(x, name, robj, ...)
 
-\method{h5WriteScalar}{H5Group}(
-  x,
-  name,
-  robj,
-  stype = c("utf8", "ascii7"),
-  shuffle = TRUE,
-  gzip_level = 6,
-  ...
-)
+\method{h5WriteScalar}{H5Group}(x, name, robj, stype = c("utf8", "ascii7"), ...)
 
 \method{h5WriteScalar}{H5File}(x, name, robj, ...)
 
@@ -35,12 +27,6 @@ path name of HDF5 file.}
 \code{link[hdf5r:H5File-class]{H5File}}.}
 
 \item{stype}{'utf8' or 'ascii7'. Passed to \code{\link{h5GuessDtype}}.}
-
-\item{shuffle}{Whether or not to \code{set_shuffle()} when create the 
-dataset. See \code{[hdf5r:H5P_DATASET_CREATE-class]{H5P_DATASET_CREATE}}}
-
-\item{gzip_level}{Enable zipping at the level given here. Only if chunk_dims 
-is not \code{NULL}.}
 
 \item{overwrite}{Whether or not to overwrite the existing \code{name}.}
 }

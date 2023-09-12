@@ -54,6 +54,8 @@ stopifnot(identical(obs, obs2))
 h5Copy(file, "obsm/tsne", to.file, "obsm/tsne")
 obsm <- h5Read(to.file, "obsm")
 
+h5Copy(file, "/", to.file, "/")
+
 }
 \seealso{
 \code{\link[hdf5r]{H5File}}
