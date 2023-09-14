@@ -75,6 +75,10 @@ writing. Increasing block_size may speed up but at an additional memory cost.}
 
 \item{name}{Name of the HDF5 dataset to be written.}
 }
+\value{
+This is an operation function and no return. Any failure should raise an 
+error.
+}
 \description{
 Low-level helper function to write atomic R data into an existing H5 dataset. 
 All data written will be treated as array for HDF5.

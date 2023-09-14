@@ -45,6 +45,11 @@ h5MaxDims(x, ...)
 \item{name}{A link in \code{file}. Must represent an H5D. Used when \code{x} 
 is an \code{H5Group}, \code{H5File} or an HDF5 file.}
 }
+\value{
+\code{h5Dims} returns the dimension of the HDF5 dataset.
+
+\code{h5MaxDims} returns the maximal dimension of the HDF5 dataset.
+}
 \description{
 Functions to get the information from an HDF5 dataset.
 }

@@ -26,7 +26,8 @@ path name of HDF5 file.}
 \item{mode}{Passed to \code{\link{h5TryOpen}}}
 }
 \value{
-An opened \code{\link[hdf5r]{H5Group}} or \code{\link[hdf5r]{H5D}}.
+An opened \code{\link[hdf5r]{H5File}}, \code{\link[hdf5r]{H5Group}} 
+or \code{\link[hdf5r]{H5D}}.
 }
 \description{
 Open an HDF5 file, file-handler or group object

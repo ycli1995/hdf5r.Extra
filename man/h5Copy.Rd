@@ -29,6 +29,10 @@ h5Copy(
 
 \item{...}{Arguments passed to \code{H5File$obj_copy_from()}}
 }
+\value{
+This is an operation function and no return. Any failure should raise an 
+error.
+}
 \description{
 Copy an HDF5 link from one file to another file.
 }

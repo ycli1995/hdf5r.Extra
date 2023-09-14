@@ -30,6 +30,10 @@ path name of HDF5 file.}
 
 \item{overwrite}{Whether or not to overwrite the existing \code{name}.}
 }
+\value{
+This is an operation function and no return. Any failure should raise an 
+error.
+}
 \description{
 Low-level helper function to write scalar R data into HDF5 dataset. Data will 
 be written into scalar space instead of array space.

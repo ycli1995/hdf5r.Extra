@@ -26,6 +26,10 @@ path name of HDF5 file.}
 \item{show.warnings}{When the group \code{name} already exists, whether or 
 not to show warning messages.}
 }
+\value{
+This is an operation function and no return. Any failure should raise an 
+error.
+}
 \description{
 Create new HDF5 group
 }

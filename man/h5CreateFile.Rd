@@ -14,6 +14,10 @@ h5CreateFile(x, ...)
 
 \item{...}{Arguments passed to \code{H5File$new()}}
 }
+\value{
+This is an operation function and no return. Any failure should raise an 
+error.
+}
 \description{
 A wrapper for \code{\link[hdf5r]{H5File}}\code{$new()}. If \code{file} 
 exists, will only raise a warning.

@@ -28,6 +28,11 @@ a 2-dimension array-like data.}
 
 \item{toS4.func}{A function to convert the read R list into an S4 object.}
 }
+\value{
+The load R object. Currently support \code{vector}, \code{matrix}, 
+\code{data.frame}, \code{list} and sparse matrix (\code{dgCMatrix} and 
+\code{dgRMatrix}).
+}
 \description{
 Function to read data from an existing HDF5 group.
 }

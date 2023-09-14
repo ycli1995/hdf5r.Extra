@@ -14,6 +14,9 @@ h5Prep(x, ...)
 
 \item{...}{Arguments to be passed to other methods}
 }
+\value{
+An R object of converted \code{x}.
+}
 \description{
 Methods to transform a complex R object (for example, S4 object) into 
 combination of base R objects, such as \code{vector}, \code{array}, 

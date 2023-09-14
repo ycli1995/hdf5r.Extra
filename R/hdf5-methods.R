@@ -1407,7 +1407,7 @@ h5Prep.default <- function(x, ...) {
 #' combination of base R objects using \code{\link{h5Prep}} before writting it.
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
 #' tmp.file <- tempfile(fileext = ".h5")
 #' h5CreateFile(tmp.file)
@@ -1478,7 +1478,7 @@ h5Write.default <- function(
 #' is \code{TRUE}. 
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # matrix -----------------------
 #' x <- h5Read(file, "X")
 #' h5Write(x, tmp.file, "X")
@@ -1567,7 +1567,7 @@ h5Write.factor <- function(
 }
 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # data.frame -----------------------
 #' x <- h5Read(file, "obs")
 #' h5Write(x, tmp.file, "obs")
@@ -1613,7 +1613,7 @@ h5Write.data.frame <- function(
 #' write the dimension names.
 #' 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # dgCMatrix -----------------------
 #' x <- h5Read(file, "raw/X")
 #' h5Write(x, tmp.file, "raw/X", overwrite = TRUE)
@@ -1697,7 +1697,7 @@ h5Write.dgRMatrix <- function(
 
 
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # list -----------------------
 #' x <- h5Read(file)
 #' h5Write(x, tmp.file, name = NULL, overwrite = TRUE)

@@ -166,6 +166,10 @@ h5TryOpen <- function(
 #' @name h5Class
 NULL
 
+#' @returns 
+#' \code{h5Class} returns a character specifying the class of the query HDF5 
+#' link (typically H5D, H5Group or H5File).
+#' 
 #' @examples
 #' file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
 #' h5Class(file, "X")
@@ -182,6 +186,9 @@ h5Class <- function(file, name) {
   return(cls[1])
 }
 
+#' @returns 
+#' \code{is.H5D} and \code{is.H5Group} return a logical value.
+#' 
 #' @importFrom hdf5r H5D
 #' @export
 #' @rdname h5Class
@@ -219,6 +226,10 @@ is.H5Group <- function(file, name) {
 #' \item Attributes of \code{from.name} will be kept, while those of its parent 
 #' H5Groups will not.
 #' }
+#' 
+#' @returns 
+#' This is an operation function and no return. Any failure should raise an 
+#' error.
 #' 
 #' @examples
 #' file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
@@ -284,6 +295,10 @@ h5Copy <- function(
 #' @param ... Arguments passed to \code{H5File$link_move_from()}
 #' 
 #' @seealso \code{\link[hdf5r]{H5File}}
+#' 
+#' @returns 
+#' This is an operation function and no return. Any failure should raise an 
+#' error.
 #' 
 #' @examples
 #' file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")

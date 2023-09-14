@@ -25,6 +25,10 @@ nothing will be done.}
 
 \item{verbose}{Print progress.}
 }
+\value{
+This is an operation function and no return. Any failure should raise an 
+error.
+}
 \description{
 Delete an HDF5 link
 }

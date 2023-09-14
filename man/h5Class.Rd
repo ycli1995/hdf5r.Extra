@@ -17,6 +17,12 @@ is.H5Group(file, name)
 
 \item{name}{Name of a link in \code{file}}
 }
+\value{
+\code{h5Class} returns a character specifying the class of the query HDF5 
+link (typically H5D, H5Group or H5File).
+
+\code{is.H5D} and \code{is.H5Group} return a logical value.
+}
 \description{
 Functions to get or check the class of an HDF5 link.
 }

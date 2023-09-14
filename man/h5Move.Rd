@@ -20,6 +20,10 @@ overwrite it.}
 
 \item{...}{Arguments passed to \code{H5File$link_move_from()}}
 }
+\value{
+This is an operation function and no return. Any failure should raise an 
+error.
+}
 \description{
 Move one HDF5 link to another position within the same file.
 }

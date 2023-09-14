@@ -34,12 +34,18 @@ h5Exists <- function(x, name, ...) {
 #' @name H5-dataset-info
 NULL
 
+#' @returns 
+#' \code{h5Dims} returns the dimension of the HDF5 dataset.
+#' 
 #' @rdname H5-dataset-info
 #' @export h5Dims
 h5Dims <- function(x, ...) {
   UseMethod(generic = "h5Dims", object = x)
 }
 
+#' @returns 
+#' \code{h5MaxDims} returns the maximal dimension of the HDF5 dataset.
+#' 
 #' @rdname H5-dataset-info
 #' @export h5MaxDims
 h5MaxDims <- function(x, ...) {
@@ -72,6 +78,10 @@ h5List <- function(x, ...) {
 #' @param x Name of the new HDF5 file.
 #' @param ... Arguments passed to \code{H5File$new()}
 #' 
+#' @returns 
+#' This is an operation function and no return. Any failure should raise an 
+#' error.
+#' 
 #' @rdname h5CreateFile
 #' @export h5CreateFile
 h5CreateFile <- function(x, ...) {
@@ -89,6 +99,10 @@ h5CreateFile <- function(x, ...) {
 #' 
 #' @seealso \code{\link[hdf5r]{H5Group}}
 #' 
+#' @returns 
+#' This is an operation function and no return. Any failure should raise an 
+#' error.
+#' 
 #' @rdname h5CreateGroup
 #' @export h5CreateGroup
 h5CreateGroup <- function(x, name, ...) {
@@ -105,6 +119,10 @@ h5CreateGroup <- function(x, name, ...) {
 #' @seealso \code{\link[hdf5r]{H5File}} and \code{\link[hdf5r]{H5Group}} for the 
 #' \code{$create_dataset()} methods.
 #' 
+#' @returns 
+#' This is an operation function and no return. Any failure should raise an 
+#' error.
+#' 
 #' @rdname h5CreateDataset
 #' @export h5CreateDataset
 h5CreateDataset <- function(x, name, ...) {
@@ -118,7 +136,8 @@ h5CreateDataset <- function(x, name, ...) {
 #' @param name Name of the opened HDF5 link.
 #' @param ... Arguments passed to \code{H5Group$open()}.
 #' 
-#' @return An opened \code{\link[hdf5r]{H5Group}} or \code{\link[hdf5r]{H5D}}.
+#' @return An opened \code{\link[hdf5r]{H5File}}, \code{\link[hdf5r]{H5Group}} 
+#' or \code{\link[hdf5r]{H5D}}.
 #' 
 #' @rdname h5Open
 #' @export h5Open
@@ -132,6 +151,10 @@ h5Open <- function(x, name, ...) {
 #' @param name Name of HDF5 link to be deleted. If \code{name} doesn't exist, 
 #' nothing will be done.
 #' @param ... Arguments passed to \code{H5Group$link_delete()}
+#' 
+#' @returns 
+#' This is an operation function and no return. Any failure should raise an 
+#' error.
 #' 
 #' @rdname h5Delete
 #' @export h5Delete
@@ -199,6 +222,10 @@ h5WriteAttr <- function(x, which, robj, ...) {
 #' If you want to write \code{robj} into array space, you should use 
 #' \code{\link{h5WriteDataset}}.
 #' 
+#' @returns 
+#' This is an operation function and no return. Any failure should raise an 
+#' error.
+#' 
 #' @rdname h5WriteScalar
 #' @export h5WriteScalar
 h5WriteScalar <- function(x, name, robj, ...) {
@@ -218,6 +245,10 @@ h5WriteScalar <- function(x, name, robj, ...) {
 #' @note
 #' If you want to write \code{robj} into scalar space, you should use 
 #' \code{\link{h5WriteScalar}}.
+#' 
+#' @returns 
+#' This is an operation function and no return. Any failure should raise an 
+#' error.
 #' 
 #' @rdname h5WriteDataset
 #' @export h5WriteDataset
@@ -250,6 +281,11 @@ h5ReadDataset <- function(x, ...) {
 #' path name of HDF5 file.
 #' @param ... Arguments passed to \code{\link{h5ReadDataset}}.
 #' 
+#' @returns 
+#' The load R object. Currently support \code{vector}, \code{matrix}, 
+#' \code{data.frame}, \code{list} and sparse matrix (\code{dgCMatrix} and 
+#' \code{dgRMatrix}).
+#' 
 #' @rdname h5Read
 #' @export h5Read
 h5Read <- function(x, name = NULL, ...) {
@@ -264,6 +300,13 @@ h5Read <- function(x, name = NULL, ...) {
 #' @param file An existing HDF5 file
 #' @param name Name of the HDF5 link to be written into
 #' @param ... Arguments passed to other methods.
+#' 
+#' @returns 
+#' This is an operation function and no return. Any failure should raise an 
+#' error.
+#' 
+#' @references
+#' \url{https://anndata.readthedocs.io/en/latest/fileformat-prose.html}
 #' 
 #' @rdname h5Write
 #' @export h5Write
@@ -283,6 +326,9 @@ h5Write <- function(x, file, name, ...) {
 #' @details 
 #' In this package, \code{h5Prep} will return \code{x} itself by default. 
 #' Extended methods can be easily added for specific S4 class.
+#' 
+#' @return 
+#' An R object of converted \code{x}.
 #' 
 #' @rdname h5Prep
 #' @export h5Prep

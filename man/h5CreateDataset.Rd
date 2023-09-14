@@ -81,6 +81,10 @@ is not \code{NULL}.}
 
 \item{overwrite}{Whether or not to overwrite the existing HDF5 dataset.}
 }
+\value{
+This is an operation function and no return. Any failure should raise an 
+error.
+}
 \description{
 Create a new empty HDF5 dataset
 }
