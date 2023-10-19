@@ -81,8 +81,8 @@ h5GuessDtype <- function(x, stype = c('utf8', 'ascii7'), ...) {
 
 #' Automatically retry opening HDF5 file
 #' 
-#' Helper function to open HDF5 file. When the opening fails, will retry it util 
-#' reach a timeout.
+#' Helper function to open an HDF5 file. When the opening fails, will retry it 
+#' until reach a timeout.
 #' 
 #' @param filename An HDF5 file to open
 #' @param mode How to open it: 
@@ -235,17 +235,21 @@ is.H5Group <- function(file, name) {
 #' file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
 #' to.file <- tempfile(fileext = ".h5")
 #' 
+#' # Copy a link to a new file
 #' h5Copy(file, "obs", to.file, "obs")
-#' 
 #' obs <- h5Read(file, "obs")
 #' obs2 <- h5Read(to.file, "obs")
-#' 
 #' stopifnot(identical(obs, obs2))
 #' 
+#' # The parent link (H5Group) will be created automatically
 #' h5Copy(file, "obsm/tsne", to.file, "obsm/tsne")
 #' obsm <- h5Read(to.file, "obsm")
 #' 
-#' h5Copy(file, "/", to.file, "/")
+#' # Copy the whole file
+#' x <- h5Read(file)
+#' h5Copy(file, "/", to.file, "/", overwrite = TRUE)
+#' x2 <- h5Read(to.file)
+#' stopifnot(identical(x, x2))
 #' 
 #' @export
 h5Copy <- function(
@@ -261,6 +265,15 @@ h5Copy <- function(
   from.name <- h5AbsLinkName(name = from.name)
   to.file <- normalizePath(path = to.file, mustWork = FALSE)
   to.name <- h5AbsLinkName(name = to.name)
+  if (verbose) {
+    message(
+      "h5Copy: ",
+      "\n  Source file: ", from.file,
+      "\n  Destination file: ", to.file,
+      "\n  Source name: ", from.name,
+      "\n  Destination name: ", to.name
+    )
+  }
   if (identical(x = from.file, y = to.file)) {
     return(.h5copy_same_file(
       h5.file = from.file, 
@@ -310,7 +323,12 @@ h5Copy <- function(
 #' obs2 <- h5Read(to.file, "obs2")
 #' stopifnot(identical(obs, obs2))
 #' 
-#' h5Move(to.file, "obs", "var")
+#' # Move an object to an existing link
+#' h5Move(to.file, "obs2", "var")  # Warning
+#' h5Move(to.file, "obs2", "var", overwrite = TRUE)
+#' 
+#' # Move a non-existing object will raise an error
+#' try(h5Move(to.file, "obs", "obs3"))
 #' 
 #' @export
 h5Move <- function(
@@ -323,6 +341,14 @@ h5Move <- function(
 ) {
   from.name <- h5AbsLinkName(name = from.name)
   to.name <- h5AbsLinkName(name = to.name)
+  if (verbose) {
+    message(
+      "h5Move: ",
+      "\n  File: ", file,
+      "\n  Source name: ", from.name,
+      "\n  Destination name: ", to.name
+    )
+  }
   if (identical(x = from.name, y = to.name)) {
     warning(
       "The source name and the destination name are identical.",
@@ -332,22 +358,22 @@ h5Move <- function(
   }
   h5fh <- h5TryOpen(filename = file, mode = "r+")
   on.exit(expr = h5fh$close())
+  if (!h5Exists(x = h5fh, name = from.name)) {
+    stop("Cannot move a non-existing object: ", from.name)
+  }
   if (h5Exists(x = h5fh, name = to.name)) {
     if (!overwrite) {
       warning(
-        "'", to.name, "' already exists in file '", file, "'.\n", 
-        "You need to set 'overwrite' to TRUE",
+        "Destination object already exists. ",
+        "Set 'overwrite = TRUE' to remove it.",
         immediate. = TRUE
       )
       return(invisible(x = NULL))
     }
     if (verbose) {
-      message("Delete the existing '", to.name, "'")
+      message("Destination object already exists, removing it.")
     }
     h5fh$link_delete(name = to.name)
-  }
-  if (verbose) {
-    message("Move '", from.name, "' to '", to.name, "' in file '", file, "'")
   }
   h5CreateGroup(
     x = h5fh, 
@@ -389,9 +415,10 @@ h5Move <- function(
 #' 
 #' h5Backup(file, to.file, exclude = "X")
 #' 
-#' obs <- h5Read(file, "obs")
-#' obs2 <- h5Read(to.file, "obs")
-#' stopifnot(identical(obs, obs2))
+#' x <- h5Read(file)
+#' x2 <- h5Read(to.file)
+#' x$X <- NULL # Remove 'X'
+#' stopifnot(identical(x, x2)) # Now these two should be identical
 #' 
 #' @export
 h5Backup <- function(
@@ -405,14 +432,19 @@ h5Backup <- function(
   to.file <- to.file %||% paste0(tempfile(), ".h5")
   to.file <- normalizePath(path = to.file, mustWork = FALSE)
   from.file <- file_path_as_absolute(x = from.file)
+  if (verbose) {
+    message(
+      "h5Backup: ",
+      "\n  Source file: ", from.file,
+      "\n  Destination file: ", to.file,
+      "\n  Excluded objects: ", paste(exclude, collapse = ", ")
+    )
+  }
   if (identical(x = from.file, y = to.file)) {
-    stop("The source file and the target file are identical.")
+    stop("\n  The source file and the target file are identical.")
   }
   if (!overwrite && file.exists(to.file)) {
-    stop(
-      "The target file '", to.file, "' exists, ", 
-      "please set 'overwrite = TRUE'"
-    )
+    stop("The destination file exists, please set 'overwrite = TRUE'")
   }
   h5fh <- h5TryOpen(filename = from.file, mode = "r")
   all_links <- h5List(
@@ -438,14 +470,10 @@ h5Backup <- function(
   on.exit(expr = to.h5fh$close(), add = TRUE)
   for (i in seq_along(along.with = all_links$name)) {
     if (verbose) {
-      message(
-        "Backup '", all_links[i, "name"], "' from '", from.file, "' to ", 
-        "'", to.file, "'"
-      )
+      message("Backup '", all_links[i, "name"], "'")
     }
-    check.create_group <- all_links[i, "obj_type"] %in% "H5I_GROUP" && 
-      !h5Exists(x = to.h5fh, name = all_links[i, "name"])
-    if (check.create_group) {
+    # all_links[i, "obj_type"] is actually `factor_ext`
+    if (as.character(x = all_links[i, "obj_type"]) %in% "H5I_GROUP") {
       h5CreateGroup(
         x = to.h5fh, 
         name = all_links[i, "name"], 
@@ -526,7 +554,7 @@ h5Overwrite <- function(file, name, overwrite) {
   file <- normalizePath(path = file)
   if (name == "/" & overwrite) {
     warning(
-      "Overwrite '/' for existing file '", file, "' will create an empty file.", 
+      "Overwrite '/' will truncate anything in the orignial file:\n  ", file,
       immediate. = TRUE
     )
     h5fh <- h5TryOpen(filename = file, mode = "w")
@@ -538,12 +566,18 @@ h5Overwrite <- function(file, name, overwrite) {
   }
   if (!overwrite) {
     stop(
-      "'", name, "' exists in file ", file, ". ",
-      "Please set 'overwrite = TRUE' to delete it."
+      "\nFound object that already exists: ",
+      "\n  File: ", file, 
+      "\n  Object: ", name,
+      "\nSet 'overwrite = TRUE' to remove it."
     )
   }
   tmp.file <- tempfile(tmpdir = dirname(path = file), fileext = ".h5")
-  message("Try to overwrite '", name, "' in file '", file, "'")
+  message(
+    "Overwriting existing H5 object:",
+    "\n  File: ", file,
+    "\n  Object: ", name
+  )
   file.rename(from = file, to = tmp.file)
   tryCatch(
     expr = {

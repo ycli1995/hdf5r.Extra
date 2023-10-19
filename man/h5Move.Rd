@@ -37,7 +37,12 @@ h5Move(to.file, "obs", "obs2")
 obs2 <- h5Read(to.file, "obs2")
 stopifnot(identical(obs, obs2))
 
-h5Move(to.file, "obs", "var")
+# Move an object to an existing link
+h5Move(to.file, "obs2", "var")  # Warning
+h5Move(to.file, "obs2", "var", overwrite = TRUE)
+
+# Move a non-existing object will raise an error
+try(h5Move(to.file, "obs", "obs3"))
 
 }
 \seealso{

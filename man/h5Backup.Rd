@@ -45,8 +45,9 @@ to.file <- tempfile(fileext = ".h5")
 
 h5Backup(file, to.file, exclude = "X")
 
-obs <- h5Read(file, "obs")
-obs2 <- h5Read(to.file, "obs")
-stopifnot(identical(obs, obs2))
+x <- h5Read(file)
+x2 <- h5Read(to.file)
+x$X <- NULL # Remove 'X'
+stopifnot(identical(x, x2)) # Now these two should be identical
 
 }

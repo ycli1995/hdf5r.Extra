@@ -34,9 +34,9 @@ Open an HDF5 file, file-handler or group object
 }
 \examples{
 file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
-obs <- h5Open(file, "obs")
+obs <- h5Open(file, "obs", mode = "r")
 stopifnot(inherits(obs, "H5Group"))
-tsne <- h5Open(file, "obsm/tsne")
+tsne <- h5Open(file, "obsm/tsne", mode = "r")
 stopifnot(inherits(tsne, "H5D"))
 
 }

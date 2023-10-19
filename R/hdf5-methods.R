@@ -130,7 +130,7 @@ h5Dims.H5File <- function(x, name, ...) {
 
 #' @examples
 #' file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
-#' h5obj <- h5Open(file, "X")
+#' h5obj <- h5Open(file, "X", mode = "r")
 #' 
 #' h5Dims(file, "X")
 #' h5Dims(h5obj)
@@ -302,7 +302,7 @@ h5List.character <- function(
 h5CreateFile.character <- function(x, ...) {
   x <- normalizePath(path = x, mustWork = FALSE)
   if (file.exists(x)) {
-    warning(x, " already exists.", immediate. = TRUE)
+    warning("File already exists: ", x, immediate. = TRUE)
     return(invisible(x = NULL))
   }
   h5fh <- h5TryOpen(filename = x, mode = "w", ...)
@@ -509,9 +509,9 @@ h5Open.H5File <- function(x, name, ...) {
 #' 
 #' @examples
 #' file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
-#' obs <- h5Open(file, "obs")
+#' obs <- h5Open(file, "obs", mode = "r")
 #' stopifnot(inherits(obs, "H5Group"))
-#' tsne <- h5Open(file, "obsm/tsne")
+#' tsne <- h5Open(file, "obsm/tsne", mode = "r")
 #' stopifnot(inherits(tsne, "H5D"))
 #' 
 #' @export
@@ -586,7 +586,7 @@ h5Attr.H5File <- function(x, which, name = NULL, ...) {
 #' x <- h5Attr(file, "column-order", "raw/var") ## An empty attribute
 #' stopifnot(is.null(x))
 #' 
-#' h5obj <- h5Open(file, "raw/var")
+#' h5obj <- h5Open(file, "raw/var", mode = "r")
 #' x <- h5Attr(h5obj, "column-order")
 #' 
 #' @export
@@ -995,8 +995,10 @@ h5WriteDataset.H5D <- function(
   .check_before_h5d_write(h5obj = x, dims = dims, idx_list = idx_list)
   if (verbose && is.list(x = idx_list)) {
     message(
-      "Try to write 'robj' to ", .idx_list_to_msg(idx_list = idx_list), " ",
-      "of existing H5D '", x$get_obj_name(), "'"
+      "Writing 'robj' into subset of H5 dataset:",
+      "\n  File: ", x$get_filename(),
+      "\n  Dataset: ", x$get_obj_name(),
+      "\n  Subset: ", .idx_list_to_msg(idx_list = idx_list)
     )
   }
   if (!transpose) {
@@ -1435,10 +1437,7 @@ h5Write.default <- function(
     x <- h5Prep(x = x)
   }
   if (isS4(x)) {
-    warning(
-      "Writing S4 Class '", class(x = x), "' to HDF5 is not supported, ",
-      "skip it."
-    )
+    warning("Skip writing unsupported S4 object into HDF5: ", class(x = x))
     return(invisible(x = NULL))
   }
   if (is.vector(x = x)) {

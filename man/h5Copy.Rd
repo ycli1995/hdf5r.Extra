@@ -48,17 +48,21 @@ H5Groups will not.
 file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
 to.file <- tempfile(fileext = ".h5")
 
+# Copy a link to a new file
 h5Copy(file, "obs", to.file, "obs")
-
 obs <- h5Read(file, "obs")
 obs2 <- h5Read(to.file, "obs")
-
 stopifnot(identical(obs, obs2))
 
+# The parent link (H5Group) will be created automatically
 h5Copy(file, "obsm/tsne", to.file, "obsm/tsne")
 obsm <- h5Read(to.file, "obsm")
 
-h5Copy(file, "/", to.file, "/")
+# Copy the whole file
+x <- h5Read(file)
+h5Copy(file, "/", to.file, "/", overwrite = TRUE)
+x2 <- h5Read(to.file)
+stopifnot(identical(x, x2))
 
 }
 \seealso{

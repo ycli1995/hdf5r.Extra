@@ -161,7 +161,7 @@ x <- h5Attr(file, "encoding-version")
 x <- h5Attr(file, "column-order", "raw/var") ## An empty attribute
 stopifnot(is.null(x))
 
-h5obj <- h5Open(file, "raw/var")
+h5obj <- h5Open(file, "raw/var", mode = "r")
 x <- h5Attr(h5obj, "column-order")
 
 # Read H5 attribute names

@@ -57,9 +57,11 @@
   }
   if (!overwrite) {
     warning(
-      "Attribute '", which, "' already exists in ", 
-      "'", h5obj$get_obj_name(), "'. ",
-      "Set 'overwrite = TRUE' to overwrite it.",
+      "Found attribute that already exists: ",
+      "\n  File: ", h5obj$get_filename(), 
+      "\n  Object: ", h5obj$get_obj_name(),
+      "\n  Attribute: ", which, 
+      "\nSet 'overwrite = TRUE' to overwrite it.",
       immediate. = TRUE
     )
     return(invisible(x = NULL))
@@ -125,16 +127,20 @@
 ) {
   if (!from.h5obj$attr_exists_by_name(attr_name = from.which, obj_name = ".")) {
     stop(
-      "Source h5attr '", from.which, "' doesn't exist in '", 
-      from.h5obj$get_obj_name(), "'"
+      "\nSource attribute doesn't exist:",
+      "\n  File: ", from.h5obj$get_filename(),
+      "\n  Object: ", from.h5obj$get_obj_name(),
+      "\n  Attribute: ", from.which
     )
   }
   is.identical <- .identical_h5loc(x = from.h5obj, y = to.h5obj) &&
     identical(x = from.which, y = to.which)
   if (is.identical) {
     warning(
-      "Source h5attr location is identical with the destination. ",
-      "Skip copying.",
+      "Source attribute is identical to the destination, skip copying: ",
+      "\n  File: ", from.h5obj$get_filename(),
+      "\n  Object: ", from.h5obj$get_obj_name(),
+      "\n  Attribute: ", from.which,
       immediate. = TRUE
     )
     return(invisible(x = NULL))
@@ -202,35 +208,29 @@
 ) {
   if (identical(x = from.name, y = to.name)) {
     warning(
-      "The source and the destination are identical. No copy will be done.",
+      "The source object is identical to the destination, skip copying.",
       immediate. = TRUE
     )
     return(invisible(x = NULL))
   }
   if (identical(x = to.name, y = "/")) {
-    stop("Cannot copy '", from.name, "' to '/' in the same H5 file.")
+    stop("\nCannot copy object to '/' within an H5 file.")
   }
   h5fh <- h5TryOpen(filename = h5.file, mode = "r+")
   on.exit(expr = h5fh$close())
   if (h5Exists(x = h5fh, name = to.name)) {
     if (!overwrite) {
       warning(
-        "'", to.name, "' already exists in file '", h5.file, "'.\n", 
-        "You need to set 'overwrite' to TRUE",
+        "Destination object already exists. ",
+        "Set 'overwrite = TRUE' to remove it.",
         immediate. = TRUE
       )
       return(invisible(x = NULL))
     }
     if (verbose) {
-      message("Delete the original '", to.name, "' in '", h5.file, "'")
+      message("Destination object already exists, removing it.")
     }
     h5fh$link_delete(name = to.name)
-  }
-  if (verbose) {
-    message(
-      "Copy '", from.name, "' to '", to.name, "' in file '", 
-      h5fh$get_filename(), "'"
-    )
   }
   h5CreateGroup(
     x = h5fh, 
@@ -267,30 +267,31 @@
     if (h5Exists(x = to.h5fh, name = to.name)) {
       if (!overwrite) {
         warning(
-          "'", to.name, "' already exists in file '", to.file, "'.\n", 
-          "You need to set 'overwrite' to TRUE",
+          "Destination object already exists. ",
+          "Set 'overwrite = TRUE' to remove it.",
           immediate. = TRUE
         )
         return(invisible(x = NULL))
       }
       if (verbose) {
-        message("Delete the original '", to.name, "' in '", to.file, "'")
+        message("Destination object already exists, removing it.")
       }
       to.h5fh$link_delete(name = to.name)
     }
   } else {
     if (file.exists(to.file) && !overwrite) {
       warning(
-        "'", to.file, "' already exists. ",
-        "You need to set 'overwrite' to TRUE"
+        "Destination file already exists. ",
+        "Set 'overwrite = TRUE' to overwrite the '/' link for it.",
+        immediate. = TRUE
       )
       return(invisible(x = NULL))
     }
     if (identical(x = from.name, y = "/")) {
       if (verbose) {
-        message("Copy ", from.file, " to ", to.file)
+        message("Copy the source file directly.")
       }
-      file.copy(from = from.file, to = to.file)
+      file.copy(from = from.file, to = to.file, overwrite = TRUE)
       return(invisible(x = NULL))
     }
     to.h5fh <- h5TryOpen(filename = to.file, mode = "w")
@@ -299,13 +300,7 @@
   h5fh <- h5TryOpen(filename = from.file, mode = "r")
   on.exit(expr = h5fh$close(), add = TRUE)
   if (!h5Exists(x = h5fh, name = from.name)) {
-    stop("Source H5 link '", from.name, "' doesn't exist")
-  }
-  if (verbose) {
-    message(
-      "Copy '", from.name, "' from file '", from.file, "' to '",
-      to.name, "' in file '", to.file, "'"
-    )
+    stop("\nSource object doesn't exist")
   }
   h5CreateGroup(
     x = to.h5fh, 
@@ -329,12 +324,17 @@
 }
 
 .h5delete <- function(h5obj, name, verbose = TRUE, ...) {
-  if (!h5Exists(x = h5obj, name = name)) {
-    warning("'", h5obj$get_obj_name(), "' does not contain '", name, "'")
-    return(invisible(x = NULL))
-  }
   if (verbose) {
-    message("Delete '", name, "' in '", h5obj$get_obj_name(), "'")
+    message(
+      "Deleting an H5 object:",
+      "\n  File: ", h5obj$get_filename(),
+      "\n  From: ", h5obj$get_obj_name(),
+      "\n  Object: ", name
+    )
+  }
+  if (!h5Exists(x = h5obj, name = name)) {
+    warning("The H5 object to be deleted doesn't exists.", immediate. = TRUE)
+    return(invisible(x = NULL))
   }
   h5obj$link_delete(name = name, ...)
   return(invisible(x = NULL))
@@ -368,6 +368,8 @@
     return(invisible(x = NULL))
   }
   path <- "."
+  file_warning <- paste0("\n  File: ", h5group$get_filename())
+  group_warning <- paste0("\n  Source group: ", h5group$get_obj_name())
   for (i in name) {
     path <- paste0(path, "/", i)
     if (!h5group$exists(name = path)) {
@@ -377,7 +379,8 @@
     }
     if (show.warnings) {
       warning(
-        "'", path, "' already exists in '", h5group$get_obj_name(), "'.", 
+        "H5 group already exists: ", file_warning, group_warning,
+        "\n  Target group: ", path,
         immediate. = TRUE
       )
     }
@@ -401,7 +404,7 @@
   stype <- match.arg(arg = stype)
   dtype <- dtype %||% h5GuessDtype(x = storage.mode, stype = stype)
   if (!inherits(x = dtype, what = "H5T")) {
-    stop("'dtype' must be an 'H5T'")
+    stop("\n  'dtype' must be an 'H5T'")
   }
   maxdims <- maxdims %||% dims
   h5space <- H5S$new(dims = dims, maxdims = maxdims)
@@ -447,12 +450,13 @@
   stype <- match.arg(arg = stype)
   assert_scalar(x = robj)
   dtype <- h5GuessDtype(x = robj, stype = stype)
-  
-  .h5group_create_group(h5group = h5group, name = dirname(path = name))
-  
+  .h5group_create_group(
+    h5group = h5group, 
+    name = dirname(path = name),
+    show.warnings = FALSE
+  )
   h5space <- H5S$new(type = "scalar")
   on.exit(expr = h5space$close(), add = TRUE)
-  
   h5d <- h5group$create_dataset(
     name = name, 
     dtype = dtype,
@@ -462,7 +466,6 @@
   )
   on.exit(expr = h5d$close(), add = TRUE)
   h5d$write(args = NULL, value = robj)
-  
   ## Add encoding informations for scalar
   .h5attr_write(
     h5obj = h5d, 
@@ -498,7 +501,7 @@
     on.exit(expr = h5d$close())
   }
   if (!inherits(x = h5d, "H5D")) {
-    stop("'", h5d$get_obj_name(), "' is not an H5D")
+    stop("\n  '", h5d$get_obj_name(), "' is not an H5D")
   }
   return(h5WriteDataset(
     x = h5d,
@@ -523,7 +526,7 @@
     on.exit(expr = h5d$close())
   }
   if (!inherits(x = h5d, what = "H5D")) {
-    stop("'x[[", name, "]]' is not an H5D")
+    stop("\n  '", name, "' is not an H5D")
   }
   return(h5ReadDataset(
     x = h5d, 
@@ -571,7 +574,7 @@
     return(r_obj)
   }
   if (!is.function(x = toS4.func)) {
-    stop("'toS4.func' must be NULL or a function.")
+    stop("\n  'toS4.func' must be NULL or a function.")
   }
   return(toS4.func(r_obj))
 }
@@ -582,8 +585,9 @@
 .assert_h5d <- function(h5obj) {
   if (!inherits(x = h5obj, what = "H5D")) {
     stop(
-      "'", h5obj$get_obj_name(), "' is not an existing H5D ", 
-      "in file '", h5obj$get_filename(), "'"
+      "\nNot an H5D:",
+      "\n  File: ", h5obj$get_filename(),
+      "\n  Object: ", h5obj$get_obj_name()
     )
   }
   return(invisible(x = NULL))
@@ -630,28 +634,34 @@
   if (is.null(x = idx_list)) {
     if (!identical(x = n.dims, y = n.h5dims)) {
       stop(
-        "Dimension number of input (", n.dims, ") does not match ",
-        "the H5 dataset (", n.h5dims, ")."
+        "\nDimension number doesn't match: ",
+        "\n  Input R object: ", n.dims,
+        "\n  H5 dataset: ", n.h5dims,
+        "\n  Destination H5 dataset: ", name
       )
     }
     for (i in seq_along(along.with = dims)) {
       if (dims[i] > maxdims[i]) {
         stop(
-          "Subscript out of bounds: \n  ",
-          "The input dims[[", i, "]] ", dims[i], " is out of maxdims[", i, "] ", 
-          maxdims[i], " in '", name, "'"
+          "\nSubscript out of bounds: ",
+          "\n  Input dims[[", i, "]]: ", dims[i],
+          "\n  H5 dataset max dims[", i, "]: ", maxdims[i],
+          "\n  Destination H5 dataset: ", name
         )
       }
     }
     return(invisible(x = NULL))
   }
   if (!is.list(x = idx_list)) {
-    stop("'idx_list' must be either NULL or a list")
+    stop("\n  'idx_list' must be either NULL or a list")
   }
   if (!identical(x = length(x = idx_list), y = n.h5dims)) {
     stop(
-      "Element number of 'idx_list' must match ", 
-      "the dimension number of H5D '", name, "'"
+      "\nElement number of 'idx_list' doesn't match ",
+      "the dimension number of dataset:",
+      "\n  idx_list: ", length(x = idx_list),
+      "\n  H5 dataset: ", n.h5dims,
+      "\n  Destination H5 dataset: ", name
     )
   }
   max.idx <- vapply(
@@ -662,23 +672,26 @@
   len.idx <- lengths(x = idx_list)
   if (!identical(x = len.idx, y = dims)) {
     stop(
-      "'idx_list'(", paste(len.idx, collapse = ", "), ") ",
-      "doesn't match dimension of 'robj' ", 
-      "(", paste(dims, collapse = ", "), ")."
+      "\n'idx_list' doesn't match the dimensions of 'robj':",
+      "\n  idx_list: ", paste(len.idx, collapse = ", "),
+      "\n  robj: ", paste(dims, collapse = ", ")
     )
   }
   for (i in seq_along(along.with = maxdims)) {
     if (max.idx[i] > maxdims[i]) {
       stop(
-        "Subscript out of bounds: ",
-        "idx_list[[", i, "]] is out of maxdims[", i, "] in '", name, "': ", 
-        maxdims[i]
+        "\nSubscript out of bounds: ",
+        "\n  Max idx_list[[", i, "]]: ", max.idx[i],
+        "\n  H5 dataset max dims[", i, "]: ", maxdims[i],
+        "\n  Destination H5 dataset: ", name
       )
     }
     if (len.idx[i] > maxdims[i]) {
       stop(
-        "Length of idx_list[[", i, "]] is out of maxdims[", i, "] in '",
-        name, "': ", maxdims[i]
+        "\nLength out of bounds: ",
+        "\n  Length of idx_list[[", i, "]]: ", len.idx[i],
+        "\n  H5 dataset max dims[", i, "]: ", maxdims[i],
+        "\n  Destination H5 dataset: ", name
       )
     }
   }
@@ -979,13 +992,16 @@
     return(invisible(x = NULL))
   }
   if (!is.list(x = idx_list)) {
-    stop("'idx_list' must be either NULL or a list")
+    stop("\n  'idx_list' must be either NULL or a list")
   }
   dims <- h5obj$dims
   if (!identical(x = length(x = idx_list), y = length(x = dims))) {
     stop(
-      "Dimension number of input array must match ", 
-      "the dimension number of H5D '", name, "'"
+      "\nElement number of 'idx_list' doesn't match ",
+      "the dimension number of dataset:",
+      "\n  idx_list: ", length(x = idx_list),
+      "\n  H5 dataset: ", dims,
+      "\n  Destination H5 dataset: ", name
     )
   }
   # Unlike writing, we only need to check the maximun of idx_list while reading
@@ -997,9 +1013,10 @@
   for (i in seq_along(along.with = dims)) {
     if (max.idx[i] > dims[i]) {
       stop(
-        "Subscript out of bounds: \n  ",
-        "idx_list[[", i, "]] is out of dims[", i, "] in '", 
-        name, "': ", dims[i]
+        "\nSubscript out of bounds: ",
+        "\n  Max idx_list[[", i, "]]: ", max.idx[i],
+        "\n  H5 dataset dims[", i, "]: ", dims[i],
+        "\n  Destination H5 dataset: ", name
       )
     }
   }

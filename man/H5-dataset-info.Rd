@@ -55,7 +55,7 @@ Functions to get the information from an HDF5 dataset.
 }
 \examples{
 file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
-h5obj <- h5Open(file, "X")
+h5obj <- h5Open(file, "X", mode = "r")
 
 h5Dims(file, "X")
 h5Dims(h5obj)

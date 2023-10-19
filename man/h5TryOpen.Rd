@@ -37,8 +37,8 @@ be returned. Otherwise, will keep retrying. When a timeout is reached, will
 raise an error and terminate the current R session.
 }
 \description{
-Helper function to open HDF5 file. When the opening fails, will retry it util 
-reach a timeout.
+Helper function to open an HDF5 file. When the opening fails, will retry it 
+until reach a timeout.
 }
 \details{
 \code{timeout} and \code{interval} must be positive. Otherwise no retrying, 
