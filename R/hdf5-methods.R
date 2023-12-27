@@ -524,8 +524,11 @@ h5Open.character <- function(
     ...
 ) {
   mode <- match.arg(arg = mode)
+  name <- h5AbsLinkName(name = name)
   h5fh <- h5TryOpen(filename = x, mode = mode)
-  on.exit(expr = h5fh$close())
+  if (!identical(x = name, y = "/")) {
+    on.exit(expr = h5fh$close())
+  }
   return(h5Open(x = h5fh, name = name, ...))
 }
 

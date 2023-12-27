@@ -1074,6 +1074,18 @@
   if (length(x = r_list) == 0) {
     return(data.frame(row.names = rownames, stringsAsFactors = FALSE))
   }
+  # Check nrows for data.frame
+  len <- lengths(x = r_list)
+  nrows <- max(len)
+  rm_names <- names(x = r_list)[len != nrows]
+  if (length(x = rm_names) > 0) {
+    warning(
+      "Remove columns whose length is not ", nrows, ": \n  ",
+      paste(rm_names, collapse = ", "),
+      immediate. = TRUE, call. = FALSE
+    )
+    r_list <- r_list[len == nrows]
+  }
   return(data.frame(r_list, row.names = rownames, stringsAsFactors = FALSE))
 }
 
