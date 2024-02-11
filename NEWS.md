@@ -1,3 +1,7 @@
+# hdf5r.Extra 0.0.5
+## Bug fixes
+* Fixed bugs caused by `is.null` to be compatible with `hdf5r` 1.3.9.
+
 # hdf5r.Extra 0.0.4
 ## Bug fixes
 * Fixed bugs caused by `h5Open` when open the root of a HDF5 file.

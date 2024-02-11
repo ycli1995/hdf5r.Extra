@@ -1064,7 +1064,8 @@
   index <- h5Attr(x = h5obj, which = "_index")
   r_list <- .h5read_list(h5obj = h5obj)
   rownames <- NULL
-  if (!is.null(x = index)) {
+  if (length(x = index) > 0) {
+    stopifnot(length(x = index) == 1)
     rownames <- r_list[[index]]
     r_list[[index]] <- NULL
   }

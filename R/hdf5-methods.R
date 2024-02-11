@@ -587,7 +587,7 @@ h5Attr.H5File <- function(x, which, name = NULL, ...) {
 #' # Read H5 attribute
 #' x <- h5Attr(file, "encoding-version")
 #' x <- h5Attr(file, "column-order", "raw/var") ## An empty attribute
-#' stopifnot(is.null(x))
+#' stopifnot(length(x) == 0)
 #' 
 #' h5obj <- h5Open(file, "raw/var", mode = "r")
 #' x <- h5Attr(h5obj, "column-order")
@@ -878,7 +878,7 @@ h5DeleteAttr.H5File <- function(x, which, name = NULL, ...) {
 #' @examples
 #' # Delete H5 attribute
 #' h5DeleteAttr(tmp.file, "new_a", name = "X")
-#' stopifnot(is.null(h5Attr(tmp.file, "new_a", name = "X")))
+#' stopifnot(length(h5Attr(tmp.file, "new_a", name = "X")) == 0)
 #' 
 #' @export
 #' @rdname H5-attributs
