@@ -1443,7 +1443,7 @@ h5Write.default <- function(
     warning("Skip writing unsupported S4 object into HDF5: ", class(x = x))
     return(invisible(x = NULL))
   }
-  if (is.vector(x = x)) {
+  if (is.vector(x = x) && !is.list(x = x)) {
     # Treat vector as 1d array
     .h5write_vector(
       x = x, 

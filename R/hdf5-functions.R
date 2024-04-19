@@ -265,15 +265,13 @@ h5Copy <- function(
   from.name <- h5AbsLinkName(name = from.name)
   to.file <- normalizePath(path = to.file, mustWork = FALSE)
   to.name <- h5AbsLinkName(name = to.name)
-  if (verbose) {
-    message(
-      "h5Copy: ",
-      "\n  Source file: ", from.file,
-      "\n  Destination file: ", to.file,
-      "\n  Source name: ", from.name,
-      "\n  Destination name: ", to.name
-    )
-  }
+  verboseMsg(
+    "h5Copy: ",
+    "\n  Source file: ", from.file,
+    "\n  Destination file: ", to.file,
+    "\n  Source name: ", from.name,
+    "\n  Destination name: ", to.name
+  )
   if (identical(x = from.file, y = to.file)) {
     return(.h5copy_same_file(
       h5.file = from.file, 
@@ -341,14 +339,12 @@ h5Move <- function(
 ) {
   from.name <- h5AbsLinkName(name = from.name)
   to.name <- h5AbsLinkName(name = to.name)
-  if (verbose) {
-    message(
-      "h5Move: ",
-      "\n  File: ", file,
-      "\n  Source name: ", from.name,
-      "\n  Destination name: ", to.name
-    )
-  }
+  verboseMsg(
+    "h5Move: ",
+    "\n  File: ", file,
+    "\n  Source name: ", from.name,
+    "\n  Destination name: ", to.name
+  )
   if (identical(x = from.name, y = to.name)) {
     warning(
       "The source name and the destination name are identical.",
@@ -432,14 +428,12 @@ h5Backup <- function(
   to.file <- to.file %||% paste0(tempfile(), ".h5")
   to.file <- normalizePath(path = to.file, mustWork = FALSE)
   from.file <- file_path_as_absolute(x = from.file)
-  if (verbose) {
-    message(
-      "h5Backup: ",
-      "\n  Source file: ", from.file,
-      "\n  Destination file: ", to.file,
-      "\n  Excluded objects: ", paste(exclude, collapse = ", ")
-    )
-  }
+  verboseMsg(
+    "h5Backup: ",
+    "\n  Source file: ", from.file,
+    "\n  Destination file: ", to.file,
+    "\n  Excluded objects: ", paste(exclude, collapse = ", ")
+  )
   if (identical(x = from.file, y = to.file)) {
     stop("\n  The source file and the target file are identical.")
   }
@@ -469,9 +463,7 @@ h5Backup <- function(
   to.h5fh <- h5TryOpen(filename = to.file, mode = "w")
   on.exit(expr = to.h5fh$close(), add = TRUE)
   for (i in seq_along(along.with = all_links$name)) {
-    if (verbose) {
-      message("Backup '", all_links[i, "name"], "'")
-    }
+    verboseMsg("Backup '", all_links[i, "name"], "'")
     # all_links[i, "obj_type"] is actually `factor_ext`
     if (as.character(x = all_links[i, "obj_type"]) %in% "H5I_GROUP") {
       h5CreateGroup(

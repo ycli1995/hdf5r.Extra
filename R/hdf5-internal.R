@@ -227,9 +227,7 @@
       )
       return(invisible(x = NULL))
     }
-    if (verbose) {
-      message("Destination object already exists, removing it.")
-    }
+    verboseMsg("Destination object already exists, removing it.")
     h5fh$link_delete(name = to.name)
   }
   h5CreateGroup(
@@ -273,9 +271,7 @@
         )
         return(invisible(x = NULL))
       }
-      if (verbose) {
-        message("Destination object already exists, removing it.")
-      }
+      verboseMsg("Destination object already exists, removing it.")
       to.h5fh$link_delete(name = to.name)
     }
   } else {
@@ -288,9 +284,7 @@
       return(invisible(x = NULL))
     }
     if (identical(x = from.name, y = "/")) {
-      if (verbose) {
-        message("Copy the source file directly.")
-      }
+      verboseMsg("Copy the source file directly.")
       file.copy(from = from.file, to = to.file, overwrite = TRUE)
       return(invisible(x = NULL))
     }
@@ -324,14 +318,12 @@
 }
 
 .h5delete <- function(h5obj, name, verbose = TRUE, ...) {
-  if (verbose) {
-    message(
-      "Deleting an H5 object:",
-      "\n  File: ", h5obj$get_filename(),
-      "\n  From: ", h5obj$get_obj_name(),
-      "\n  Object: ", name
-    )
-  }
+  verboseMsg(
+    "Deleting an H5 object:",
+    "\n  File: ", h5obj$get_filename(),
+    "\n  From: ", h5obj$get_obj_name(),
+    "\n  Object: ", name
+  )
   if (!h5Exists(x = h5obj, name = name)) {
     warning("The H5 object to be deleted doesn't exists.", immediate. = TRUE)
     return(invisible(x = NULL))
@@ -576,7 +568,8 @@
   if (!is.function(x = toS4.func)) {
     stop("\n  'toS4.func' must be NULL or a function.")
   }
-  return(toS4.func(r_obj))
+  S4Class <- h5Attr(x = h5group, which = "S4Class")
+  return(toS4.func(r_obj, S4Class))
 }
 
 

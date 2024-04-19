@@ -22,6 +22,7 @@ HDF5_options <- list(
 #' @importFrom rlang `%||%`
 #' @importFrom tools file_path_as_absolute
 #' @importFrom utils globalVariables
+#' @importFrom easy.utils verboseMsg
 #' @keywords internal
 "_PACKAGE"
 
