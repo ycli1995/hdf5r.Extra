@@ -746,6 +746,34 @@
   return(invisible(x = NULL))
 }
 
+.h5group_write_vector <- function(
+    robj, 
+    h5group, 
+    name, 
+    stype = c('utf8', 'ascii7'), 
+    ...
+) {
+  if (length(x = robj) == 0) {
+    return(invisible(x = NULL))
+  }
+  stype <- match.arg(arg = stype)
+  dims <- .get_valid_dims(x = robj, transpose = FALSE)
+  h5CreateDataset(
+    x = h5group,
+    name = name,
+    dtype = NULL,
+    storage.mode = robj[1],
+    stype = stype,
+    dims = dims,
+    ...
+  )
+  h5d <- h5Open(x = h5group, name = name)
+  on.exit(expr = h5d$close(), add = TRUE)
+  h5d$write(args = NULL, value = as.array(x = robj))
+  .h5d_set_encode(robj = robj, h5d = h5d)
+  return(invisible(x = NULL))
+}
+
 .h5write_vector <- function(
     x, 
     file, 
@@ -761,11 +789,18 @@
   file <- h5Overwrite(file = file, name = name, overwrite = overwrite)
   h5fh <- h5TryOpen(filename = file, mode = "r+")
   on.exit(expr = h5fh$close())
-  .h5write_array(
-    robj = x, 
-    h5group = h5fh, 
-    name = name, 
-    transpose = FALSE, 
+  # .h5write_array(
+  #   robj = x, 
+  #   h5group = h5fh, 
+  #   name = name, 
+  #   transpose = FALSE, 
+  #   gzip_level = gzip_level,
+  #   ...
+  # )
+  .h5group_write_vector(
+    robj = x,
+    h5group = h5fh,
+    name = name,
     gzip_level = gzip_level,
     ...
   )
@@ -786,11 +821,10 @@
     categories = levels(x = robj)
   )
   for (i in names(x = r_obj)) {
-    .h5write_array(
+    .h5group_write_vector(
       robj = r_obj[[i]],
       h5group = h5group,
       name = file.path(name, i),
-      transpose = FALSE,
       gzip_level = gzip_level,
       ...
     )
@@ -819,12 +853,10 @@
     gzip_level = 6, 
     ...
 ) {
-  .h5write_array(
+  .h5group_write_vector(
     robj = rownames(x = robj), 
     h5group = h5group, 
     name = file.path(name, "_index"), 
-    transpose = FALSE, 
-    maxdims = nrow(x = robj),
     gzip_level = gzip_level,
     ...
   )
