@@ -136,8 +136,18 @@ h5CreateDataset <- function(x, name, ...) {
 #' @param name Name of the opened HDF5 link.
 #' @param ... Arguments passed to \code{H5Group$open()}.
 #' 
+#' #' @details
+#' For an \code{\link[hdf5r]{H5File}} or a HDF5 file, `name` will be treated as 
+#' absolute path using \code{\link{h5AbsLinkName}}. 
+#' 
 #' @return An opened \code{\link[hdf5r]{H5File}}, \code{\link[hdf5r]{H5Group}} 
 #' or \code{\link[hdf5r]{H5D}}.
+#' \itemize{
+#' \item When \code{x} is an \code{\link[hdf5r]{H5File}} or a file path, 
+#' \code{name = "/"} should always return an \code{\link[hdf5r]{H5File}}. 
+#' \item When \code{x} is an \code{\link[hdf5r]{H5Group}}, \code{name = "/"} 
+#' should raise an error.
+#' }
 #' 
 #' @rdname h5Open
 #' @export h5Open

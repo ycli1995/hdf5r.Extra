@@ -489,8 +489,9 @@ h5CreateDataset.character <- function(
 #' @rdname h5Open
 #' @method h5Open H5Group
 h5Open.H5Group <- function(x, name, ...) {
-  if (identical(x = name, y = "/")) {
-    return(x)
+  name <- name[1]
+  if (any(name == "/")) {
+    stop("Cannot open '/' for an H5Group.")
   }
   return(x$open(name = name, ...))
 }
@@ -511,9 +512,15 @@ h5Open.H5File <- function(x, name, ...) {
 #' @examples
 #' file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
 #' obs <- h5Open(file, "obs", mode = "r")
-#' stopifnot(inherits(obs, "H5Group"))
+#' inherits(obs, "H5Group")
+#' 
+#' h5fh <- h5Open(file, "/", mode = "r")
+#' inherits(h5fh, "H5File")
+#' 
 #' tsne <- h5Open(file, "obsm/tsne", mode = "r")
-#' stopifnot(inherits(tsne, "H5D"))
+#' inherits(tsne, "H5D")
+#' 
+#' try(h5Open(obs, "/"))  ## Error
 #' 
 #' @export
 #' @rdname h5Open

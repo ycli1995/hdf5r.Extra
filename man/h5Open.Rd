@@ -21,13 +21,23 @@ path name of HDF5 file.}
 
 \item{name}{Name of the opened HDF5 link.}
 
-\item{...}{Arguments passed to \code{H5Group$open()}.}
+\item{...}{Arguments passed to \code{H5Group$open()}.
+
+#' @details
+For an \code{\link[hdf5r]{H5File}} or a HDF5 file, `name` will be treated as 
+absolute path using \code{\link{h5AbsLinkName}}.}
 
 \item{mode}{Passed to \code{\link{h5TryOpen}}}
 }
 \value{
 An opened \code{\link[hdf5r]{H5File}}, \code{\link[hdf5r]{H5Group}} 
 or \code{\link[hdf5r]{H5D}}.
+\itemize{
+\item When \code{x} is an \code{\link[hdf5r]{H5File}} or a file path, 
+\code{name = "/"} should always return an \code{\link[hdf5r]{H5File}}. 
+\item When \code{x} is an \code{\link[hdf5r]{H5Group}}, \code{name = "/"} 
+should raise an error.
+}
 }
 \description{
 Open an HDF5 file, file-handler or group object
@@ -35,8 +45,14 @@ Open an HDF5 file, file-handler or group object
 \examples{
 file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
 obs <- h5Open(file, "obs", mode = "r")
-stopifnot(inherits(obs, "H5Group"))
+inherits(obs, "H5Group")
+
+h5fh <- h5Open(file, "/", mode = "r")
+inherits(h5fh, "H5File")
+
 tsne <- h5Open(file, "obsm/tsne", mode = "r")
-stopifnot(inherits(tsne, "H5D"))
+inherits(tsne, "H5D")
+
+try(h5Open(obs, "/"))  ## Error
 
 }
