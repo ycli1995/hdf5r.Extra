@@ -26,9 +26,85 @@ test_that("h5 open", {
   expect_identical(h5g$get_obj_name(), h5g2$get_obj_name())
 })
 
-# test_that("h5 information", {
-#   test_h5_info()
-# })
+test_that("h5 information", {
+  file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
+  
+  # h5Exists
+  expect_true(h5Exists(file, "/"))
+  expect_true(h5Exists(file, "obs"))
+  expect_true(h5Exists(file, "X"))
+  expect_false(h5Exists(file, "XXX"))
+  expect_false(h5Exists(file, "AA/BBB"))
+  expect_false(h5Exists(file, "aa/bb/cc/"))
+  
+  h5fh <- h5TryOpen(file, mode = "r")
+  expect_true(h5Exists(h5fh, "/"))
+  expect_true(h5Exists(h5fh, ""))
+  expect_false(h5Exists(h5fh, "."))
+  expect_false(h5Exists(h5fh, "XXX"))
+  expect_false(h5Exists(h5fh, "AA/BBB"))
+  expect_false(h5Exists(h5fh, "aa/bb/cc/"))
+  
+  h5obj <- h5Open(h5fh, "obs")
+  expect_true(h5Exists(h5obj, "/"))
+  expect_true(h5Exists(h5obj, "/obs"))
+  expect_false(h5Exists(h5obj, "."))
+  expect_true(h5Exists(h5obj, "groups"))
+  expect_true(h5Exists(h5obj, "orig.ident"))
+  expect_false(h5Exists(h5obj, "XXX"))
+  expect_false(h5Exists(h5obj, "AA/BBB"))
+  expect_false(h5Exists(h5obj, "aa/bb/cc/"))
+  
+  h5obj <- h5Open(h5fh, "uns")
+  expect_true(h5Exists(h5obj, "/"))
+  expect_false(h5Exists(h5obj, "."))
+  expect_false(h5Exists(h5obj, "XXX"))
+  expect_false(h5Exists(h5obj, "AA/BBB"))
+  expect_false(h5Exists(h5obj, "aa/bb/cc/"))
+  
+  # dimension
+  dim <- c(20, 80)
+  expect_equal(h5Dims(file, "X"), dim)
+  expect_equal(h5MaxDims(file, "/X"), dim)
+  
+  h5obj <- h5Open(file, "X", mode = "r")
+  expect_equal(h5Dims(h5obj), dim)
+  expect_equal(h5MaxDims(h5obj), dim)
+  
+  dim <- c(19, 80)
+  expect_equal(h5Dims(h5fh, "obsm/pca"), dim)
+  expect_equal(h5MaxDims(h5fh, "/obsm/pca"), dim)
+  
+  h5obj <- h5Open(h5fh, "obsm")
+  expect_equal(h5Dims(h5obj, "pca"), dim)
+  expect_equal(h5MaxDims(h5obj, "/obsm/pca"), dim)
+  
+  # H5List
+  adata_names <- c(
+    "X", "layers", "obs", "obsm", "obsp", 
+    "raw", "uns", "var", "varm", "varp"
+  )
+  expect_identical(h5List(file), adata_names)
+  expect_identical(h5List(h5fh), adata_names)
+  expect_identical(h5List(file, full.names = TRUE), paste0("/", adata_names))
+  expect_identical(h5List(h5fh, full.names = TRUE), paste0("/", adata_names))
+  
+  expect_error(h5List(file, "X"))
+  h5obj <- h5Open(file, "X", mode = "r")
+  expect_error(h5List(h5obj))
+  
+  df1 <- h5List(file, simplify = FALSE)
+  expect_s3_class(df1, "data.frame")
+  expect_equal(df1$name, adata_names)
+  
+  df1 <- h5List(file, simplify = FALSE, recursive = TRUE)
+  expect_equal(df1$name, h5List(file, recursive = TRUE))
+  
+  reduc_names <- c("pca", "tsne")
+  expect_equal(h5List(file, "obsm"), reduc_names)
+  h5obj <- h5Open(file, "obsm", mode = "r")
+  expect_equal(h5List(h5obj), reduc_names)
+})
 
 test_that("h5 delete", {
   file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")

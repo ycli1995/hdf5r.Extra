@@ -1420,7 +1420,6 @@ h5Prep.default <- function(x, ...) {
 #' combination of base R objects using \code{\link{h5Prep}} before writting it.
 #' 
 #' @examples
-#' \donttest{
 #' file <- system.file("extdata", "pbmc_small.h5ad", package = "hdf5r.Extra")
 #' tmp.file <- tempfile(fileext = ".h5")
 #' h5CreateFile(tmp.file)
@@ -1429,8 +1428,6 @@ h5Prep.default <- function(x, ...) {
 #' x <- h5Read(file, "/raw/X/data")
 #' h5Write(x, tmp.file, "raw/X/data")
 #' x2 <- h5Read(tmp.file, "raw/X/data")
-#' stopifnot(identical(x, x2))
-#' }
 #' 
 #' @export
 #' @rdname h5Write
@@ -1619,17 +1616,16 @@ h5Write.data.frame <- function(
 
 #' @param add.shape When writing a CSC- or CSR-matrix, whether or not to also 
 #' write the number of dimensions into an HDF5 dataset.
-#' @param dimnames When writing a CSC- or CSR-matrix, whether or not to also 
+#' @param add.dimnames When writing a CSC- or CSR-matrix, whether or not to also 
 #' write the dimension names.
 #' 
 #' @examples
-#' \donttest{
+#' 
 #' # dgCMatrix -----------------------
 #' x <- h5Read(file, "raw/X")
 #' h5Write(x, tmp.file, "raw/X", overwrite = TRUE)
 #' x2 <- h5Read(tmp.file, "raw/X")
 #' stopifnot(identical(x, x2))
-#' }
 #' 
 #' @importMethodsFrom Matrix t
 #' @export
@@ -1642,7 +1638,7 @@ h5Write.dgCMatrix <- function(
     overwrite = FALSE, 
     transpose = FALSE,
     add.shape = FALSE,
-    dimnames = list(),
+    add.dimnames = TRUE,
     gzip_level = 6,
     ...
 ) {
@@ -1661,14 +1657,13 @@ h5Write.dgCMatrix <- function(
     h5group = h5fh, 
     name = name, 
     add.shape = add.shape, 
-    dimnames = dimnames,
+    add.dimnames = add.dimnames,
     gzip_level = gzip_level,
     ...
   )
   return(invisible(x = NULL))
 }
 
-#' @importFrom MatrixExtra t_shallow
 #' @importMethodsFrom Matrix t
 #' @export
 #' @rdname h5Write
@@ -1680,7 +1675,7 @@ h5Write.dgRMatrix <- function(
     overwrite = FALSE, 
     transpose = FALSE,
     add.shape = FALSE,
-    dimnames = list(),
+    add.dimnames = TRUE,
     gzip_level = 6,
     ...
 ) {
@@ -1691,18 +1686,19 @@ h5Write.dgRMatrix <- function(
     x <- t(x = x)
     gc(verbose = FALSE)
   }
-  x <- t_shallow(x = x)
-  return(h5Write(
-    x = x,
-    file = file,
-    name = name,
-    overwrite = overwrite,
-    transpose = transpose,
-    add.shape = add.shape,
-    dimnames = dimnames,
+  file <- h5Overwrite(file = file, name = name, overwrite = overwrite)
+  h5fh <- h5TryOpen(filename = file, mode = "r+")
+  on.exit(expr = h5fh$close())
+  .h5write_sparse(
+    robj = x, 
+    h5group = h5fh, 
+    name = name, 
+    add.shape = add.shape, 
+    add.dimnames = add.dimnames,
     gzip_level = gzip_level,
     ...
-  ))
+  )
+  return(invisible(x = NULL))
 }
 
 

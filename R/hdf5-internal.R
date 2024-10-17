@@ -928,7 +928,7 @@
     h5group, 
     name, 
     add.shape = FALSE, 
-    dimnames = list(),
+    add.dimnames = TRUE,
     gzip_level = gzip_level,
     ...
 ) {
@@ -937,11 +937,10 @@
     h5d_sparse_names <- c(x = "data", j = "indices", p = "indptr")
   }
   for (i in names(x = h5d_sparse_names)) {
-    .h5write_array(
+    .h5group_write_vector(
       robj = slot(object = robj, name = i),
       h5group = h5group,
       name = file.path(name, h5d_sparse_names[i]),
-      transpose = FALSE,
       maxdims = Inf,
       gzip_level = gzip_level,
       ...
@@ -952,7 +951,7 @@
     h5group = h5group, 
     name = name, 
     add.shape = add.shape, 
-    dimnames = dimnames
+    add.dimnames = add.dimnames
   )
   return(invisible(x = NULL))
 }
@@ -962,47 +961,36 @@
     h5group, 
     name,
     add.shape = FALSE, 
-    dimnames = list()
+    add.dimnames = TRUE
 ) {
-  h5WriteAttr(
-    x = h5group,
-    name = name, 
-    which = "shape",
-    robj = rev(x = dim(x = robj))
-  )
   encode_type <- if (is(object = robj, class2 = "dgCMatrix")) {
     "csr_matrix"
   } else if (is(object = robj, class2 = "dgRMatrix")) {
     "csc_matrix"
   }
-  h5WriteAttr(
-    x = h5group,
-    name = name, 
-    which = "encoding-type",
-    robj = encode_type
+  extra <- list(
+    "encoding-type" = encode_type,
+    "encoding-version" = "0.1.0",
+    "shape" = rev(x = dim(x = robj))
   )
-  h5WriteAttr(
-    x = h5group,
-    name = name, 
-    which = "encoding-version",
-    robj = "0.1.0"
-  )
+  for (i in names(extra)) {
+    h5WriteAttr(x = h5group, name = name, which = i, robj = extra[[i]])
+  }
   if (add.shape) {
-    .h5write_array(
+    .h5group_write_vector(
       robj = rev(x = dim(x = robj)), 
       h5group = h5group, 
-      name = file.path(name, "shape"), 
-      transpose = FALSE
+      name = file.path(name, "shape")
     )
   }
-  if (identical(x = lengths(x = dimnames), y = dim(x = robj))) {
+  if (add.dimnames) {
+    dimnames <- dimnames(x = robj)
     names(x = dimnames) <- c("row_names", "col_names")
     for (i in names(x = dimnames)) {
-      .h5write_array(
+      .h5group_write_vector(
         robj = dimnames[[i]], 
         h5group = h5group, 
-        name = file.path(name, i),
-        transpose = FALSE
+        name = file.path(name, i)
       )
     }
   }
