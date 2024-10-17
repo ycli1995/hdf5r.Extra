@@ -5,7 +5,8 @@
 
 HDF5_options <- list(
   h5TryOpen.timeout = 0,
-  h5TryOpen.interval = 0
+  h5TryOpen.interval = 0,
+  h5.overwrite.verbose = FALSE
 )
 
 .onLoad <- function(libname, pkgname) {

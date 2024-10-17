@@ -507,6 +507,7 @@ h5Backup <- function(
 #' @param file An existing HDF5 file
 #' @param name Name of HDF5 link to be overwritten. 
 #' @param overwrite Whether or not to overwrite \code{name}. 
+#' @param verbose Print progress.
 #' 
 #' @return Path to \code{file} which is ready to be written.
 #' 
@@ -537,7 +538,12 @@ h5Backup <- function(
 #' stopifnot(identical(obs, obs2))
 #' 
 #' @export
-h5Overwrite <- function(file, name, overwrite) {
+h5Overwrite <- function(
+    file, 
+    name, 
+    overwrite, 
+    verbose = getOption(x = "h5.overwrite.verbose", default = FALSE)
+) {
   name <- h5AbsLinkName(name = name)
   if (!file.exists(file)) {
     h5CreateFile(x = file)
@@ -565,7 +571,7 @@ h5Overwrite <- function(file, name, overwrite) {
     )
   }
   tmp.file <- tempfile(tmpdir = dirname(path = file), fileext = ".h5")
-  message(
+  verboseMsg(
     "Overwriting existing H5 object:",
     "\n  File: ", file,
     "\n  Object: ", name
