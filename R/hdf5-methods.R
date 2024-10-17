@@ -23,7 +23,8 @@ NULL
 #' @export
 #' @method h5Exists H5Group
 h5Exists.H5Group <- function(x, name, ...) {
-  if (identical(x = name, y = "/")) {
+  name <- name[1]
+  if (any(name == "/")) {
     return(TRUE)
   }
   return(tryCatch(
@@ -37,7 +38,7 @@ h5Exists.H5Group <- function(x, name, ...) {
 #' @method h5Exists H5File
 h5Exists.H5File <- function(x, name, ...) {
   name <- h5AbsLinkName(name = name)
-  if (identical(x = name, y = "/")) {
+  if (name == "/") {
     return(TRUE)
   }
   return(tryCatch(

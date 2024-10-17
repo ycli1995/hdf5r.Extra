@@ -30,8 +30,8 @@ h5AbsLinkName <- function(name) {
   if (!any(isValidCharacters(x = name))) {
     name <- ""
   }
-  root <- substring(text = name, first = 1, last = 1)
-  if (!identical(x = root, y = "/")) {
+  root <- substr(x = name, start = 1, stop = 1)
+  if (root != "/") {
     name <- paste0("/", name)
   }
   name <- gsub(pattern = "\\/+", replacement = "\\/", x = name)
@@ -272,7 +272,7 @@ h5Copy <- function(
     "\n  Source name: ", from.name,
     "\n  Destination name: ", to.name
   )
-  if (identical(x = from.file, y = to.file)) {
+  if (from.file == to.file) {
     return(.h5copy_same_file(
       h5.file = from.file, 
       from.name = from.name, 
@@ -345,7 +345,7 @@ h5Move <- function(
     "\n  Source name: ", from.name,
     "\n  Destination name: ", to.name
   )
-  if (identical(x = from.name, y = to.name)) {
+  if (from.name == to.name) {
     warning(
       "The source name and the destination name are identical.",
       immediate. = TRUE
@@ -434,7 +434,7 @@ h5Backup <- function(
     "\n  Destination file: ", to.file,
     "\n  Excluded objects: ", paste(exclude, collapse = ", ")
   )
-  if (identical(x = from.file, y = to.file)) {
+  if (from.file == to.file) {
     stop("\n  The source file and the target file are identical.")
   }
   if (!overwrite && file.exists(to.file)) {

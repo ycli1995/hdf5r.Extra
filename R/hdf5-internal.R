@@ -6,8 +6,8 @@
 }
 
 .identical_h5loc <- function(x, y) {
-  identical(x = x$get_filename(), y = y$get_filename()) &&
-    identical(x = x$get_obj_name(), y = y$get_obj_name())
+  (x$get_filename() == y$get_filename()) & 
+    (x$get_obj_name() == y$get_obj_name())
 }
 
 ## Exclude hdf5 link names =====================================================
@@ -134,7 +134,7 @@
     )
   }
   is.identical <- .identical_h5loc(x = from.h5obj, y = to.h5obj) &&
-    identical(x = from.which, y = to.which)
+    (from.which == to.which)
   if (is.identical) {
     warning(
       "Source attribute is identical to the destination, skip copying: ",
@@ -206,14 +206,14 @@
     verbose = TRUE,
     ...
 ) {
-  if (identical(x = from.name, y = to.name)) {
+  if (from.name == to.name) {
     warning(
       "The source object is identical to the destination, skip copying.",
       immediate. = TRUE
     )
     return(invisible(x = NULL))
   }
-  if (identical(x = to.name, y = "/")) {
+  if (to.name == "/") {
     stop("\nCannot copy object to '/' within an H5 file.")
   }
   h5fh <- h5TryOpen(filename = h5.file, mode = "r+")
@@ -260,7 +260,7 @@
     verbose = TRUE,
     ...
 ) {
-  if (!identical(x = to.name, y = "/")) {
+  if (to.name != "/") {
     to.h5fh <- h5TryOpen(filename = to.file, mode = "a")
     if (h5Exists(x = to.h5fh, name = to.name)) {
       if (!overwrite) {
@@ -283,7 +283,7 @@
       )
       return(invisible(x = NULL))
     }
-    if (identical(x = from.name, y = "/")) {
+    if (from.name == "/") {
       verboseMsg("Copy the source file directly.")
       file.copy(from = from.file, to = to.file, overwrite = TRUE)
       return(invisible(x = NULL))
@@ -625,7 +625,7 @@
   n.h5dims <- length(x = maxdims)
   name <- h5obj$get_obj_name()
   if (is.null(x = idx_list)) {
-    if (!identical(x = n.dims, y = n.h5dims)) {
+    if (n.dims != n.h5dims) {
       stop(
         "\nDimension number doesn't match: ",
         "\n  Input R object: ", n.dims,
@@ -648,7 +648,7 @@
   if (!is.list(x = idx_list)) {
     stop("\n  'idx_list' must be either NULL or a list")
   }
-  if (!identical(x = length(x = idx_list), y = n.h5dims)) {
+  if (length(x = idx_list) != n.h5dims) {
     stop(
       "\nElement number of 'idx_list' doesn't match ",
       "the dimension number of dataset:",
@@ -663,7 +663,7 @@
     FUN.VALUE = integer(length = 1)
   )
   len.idx <- lengths(x = idx_list)
-  if (!identical(x = len.idx, y = dims)) {
+  if (any(dims != len.idx)) {
     stop(
       "\n'idx_list' doesn't match the dimensions of 'robj':",
       "\n  idx_list: ", paste(len.idx, collapse = ", "),
@@ -988,7 +988,7 @@
     stop("\n  'idx_list' must be either NULL or a list")
   }
   dims <- h5obj$dims
-  if (!identical(x = length(x = idx_list), y = length(x = dims))) {
+  if (length(x = idx_list) != length(x = dims)) {
     stop(
       "\nElement number of 'idx_list' doesn't match ",
       "the dimension number of dataset:",
