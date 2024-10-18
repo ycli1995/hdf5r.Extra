@@ -595,7 +595,7 @@ h5Attr.H5File <- function(x, which, name = NULL, ...) {
 #' # Read H5 attribute
 #' x <- h5Attr(file, "encoding-version")
 #' x <- h5Attr(file, "column-order", "raw/var") ## An empty attribute
-#' stopifnot(length(x) == 0)
+#' length(x)
 #' 
 #' h5obj <- h5Open(file, "raw/var", mode = "r")
 #' x <- h5Attr(h5obj, "column-order")
@@ -704,7 +704,7 @@ h5Attributes.H5File <- function(x, name = NULL, ...) {
 #' # Read all H5 attributes
 #' a1 <- h5Attributes(file, "raw/var")
 #' a2 <- h5Attributes(h5obj)
-#' stopifnot(identical(a1, a2))
+#' identical(a1, a2)
 #' 
 #' @export
 #' @rdname H5-attributs
@@ -886,7 +886,7 @@ h5DeleteAttr.H5File <- function(x, which, name = NULL, ...) {
 #' @examples
 #' # Delete H5 attribute
 #' h5DeleteAttr(tmp.file, "new_a", name = "X")
-#' stopifnot(length(h5Attr(tmp.file, "new_a", name = "X")) == 0)
+#' h5Attr(tmp.file, "new_a", name = "X")
 #' 
 #' @export
 #' @rdname H5-attributs
@@ -942,19 +942,19 @@ h5WriteScalar.H5File <- function(x, name, robj, ...) {
 #' 
 #' h5WriteScalar(tmp.file,  name = "test/scalar", TRUE)
 #' x <- h5ReadDataset(tmp.file, name = "test/scalar")
-#' stopifnot(x)
+#' x
 #' 
 #' h5WriteScalar(tmp.file,  name = "test/scalar", 100.0, overwrite = TRUE)
 #' x <- h5ReadDataset(tmp.file, name = "test/scalar")
-#' stopifnot(identical(x, 100.0))
+#' x
 #' 
 #' h5WriteScalar(tmp.file,  name = "test/scalar", "ABC", overwrite = TRUE)
 #' x <- h5Read(tmp.file, name = "test/scalar")
-#' stopifnot(identical(x, "ABC"))
+#' x
 #' 
 #' h5WriteScalar(tmp.file,  name = "test/factor", factor("ABC"))
 #' x <- h5ReadDataset(tmp.file, name = "test/factor")
-#' stopifnot(identical(x, factor("ABC")))
+#' x
 #' 
 #' @export
 #' @rdname h5WriteScalar
@@ -1095,12 +1095,12 @@ h5WriteDataset.H5File <- function(
 #' ) # Must create the dataset first
 #' h5WriteDataset(tmp.file, FALSE, name = "test/bool")
 #' x <- h5Read(tmp.file, name = "test/bool")
-#' stopifnot(!x)
+#' x
 #' 
 #' h5CreateDataset(tmp.file, name = "test/num", dims = 1)
 #' h5WriteDataset(tmp.file, 100.0, name = "test/num")
 #' x <- h5Read(tmp.file, name = "test/num")
-#' stopifnot(identical(x, 100.0))
+#' x
 #' 
 #' h5CreateDataset(
 #'   tmp.file, 
@@ -1110,7 +1110,7 @@ h5WriteDataset.H5File <- function(
 #' )
 #' h5WriteDataset(tmp.file, "ABC", name = "test/string")
 #' x <- h5Read(tmp.file, name = "test/string")
-#' stopifnot(identical(x, "ABC"))
+#' x
 #' 
 #' # Vector (1d array) ##########
 #' x1 <- rep(FALSE, 10)
@@ -1122,7 +1122,7 @@ h5WriteDataset.H5File <- function(
 #' )
 #' h5WriteDataset(tmp.file, x1, name = "vec/bool")
 #' x <- h5Read(tmp.file, name = "vec/bool")
-#' stopifnot(identical(x, x1))
+#' x
 #' 
 #' x1 <- rep(1.1, 10)
 #' h5CreateDataset(
@@ -1132,7 +1132,7 @@ h5WriteDataset.H5File <- function(
 #' )
 #' h5WriteDataset(tmp.file, x1, name = "vec/num")
 #' x <- h5Read(tmp.file, name = "vec/num")
-#' stopifnot(identical(x, x1))
+#' x
 #' 
 #' x1 <- rep(2.0, 5)
 #' h5WriteDataset(
@@ -1157,7 +1157,7 @@ h5WriteDataset.H5File <- function(
 #'   name = "mat/num"
 #' )
 #' x <- h5Read(tmp.file, name = "mat/num")
-#' stopifnot(identical(x, x1))
+#' x
 #' 
 #' x1 <- matrix(2.0, 3, 4)
 #' h5WriteDataset(
@@ -1448,17 +1448,15 @@ h5Write.default <- function(
 #' is \code{TRUE}. 
 #' 
 #' @examples
-#' \donttest{
 #' # matrix -----------------------
 #' x <- h5Read(file, "X")
 #' h5Write(x, tmp.file, "X")
 #' x2 <- h5Read(tmp.file, "X")
-#' stopifnot(identical(x, x2))
+#' identical(x, x2)
 #' 
 #' h5Write(x, tmp.file, "X2", transpose = TRUE)
 #' x2 <- h5Read(tmp.file, "X2")
-#' stopifnot(identical(t(x), x2))
-#' }
+#' identical(t(x), x2)
 #' 
 #' @export
 #' @rdname h5Write
@@ -1537,18 +1535,16 @@ h5Write.factor <- function(
 }
 
 #' @examples
-#' \donttest{
 #' # data.frame -----------------------
 #' x <- h5Read(file, "obs")
 #' h5Write(x, tmp.file, "obs")
 #' x2 <- h5Read(tmp.file, "obs")
-#' stopifnot(identical(x, x2))
+#' identical(x, x2)
 #' 
 #' x <- h5Read(file, "raw/var") # data.frame with empty column
 #' h5Write(x, tmp.file, "raw/var")
 #' x2 <- h5Read(tmp.file, "raw/var")
-#' stopifnot(identical(x, x2))
-#' }
+#' identical(x, x2)
 #' 
 #' @export
 #' @rdname h5Write
@@ -1567,6 +1563,7 @@ h5Write.data.frame <- function(
   file <- h5Overwrite(file = file, name = name, overwrite = overwrite)
   h5fh <- h5TryOpen(filename = file, mode = "r+")
   on.exit(expr = h5fh$close())
+  name <- h5AbsLinkName(name = name)
   .h5write_dataframe(
     robj = x, 
     h5group = h5fh, 
@@ -1588,7 +1585,7 @@ h5Write.data.frame <- function(
 #' x <- h5Read(file, "raw/X")
 #' h5Write(x, tmp.file, "raw/X", overwrite = TRUE)
 #' x2 <- h5Read(tmp.file, "raw/X")
-#' stopifnot(identical(x, x2))
+#' identical(x, x2)
 #' 
 #' @importMethodsFrom Matrix t
 #' @export
@@ -1615,6 +1612,7 @@ h5Write.dgCMatrix <- function(
   file <- h5Overwrite(file = file, name = name, overwrite = overwrite)
   h5fh <- h5TryOpen(filename = file, mode = "r+")
   on.exit(expr = h5fh$close())
+  name <- h5AbsLinkName(name = name)
   .h5write_sparse(
     robj = x, 
     h5group = h5fh, 
@@ -1652,6 +1650,7 @@ h5Write.dgRMatrix <- function(
   file <- h5Overwrite(file = file, name = name, overwrite = overwrite)
   h5fh <- h5TryOpen(filename = file, mode = "r+")
   on.exit(expr = h5fh$close())
+  name <- h5AbsLinkName(name = name)
   .h5write_sparse(
     robj = x, 
     h5group = h5fh, 
@@ -1666,13 +1665,11 @@ h5Write.dgRMatrix <- function(
 
 
 #' @examples
-#' \donttest{
 #' # list -----------------------
 #' x <- h5Read(file)
 #' h5Write(x, tmp.file, name = NULL, overwrite = TRUE)
 #' x2 <- h5Read(tmp.file)
-#' stopifnot(identical(x, x2))
-#' }
+#' identical(x, x2)
 #' 
 #' @export
 #' @rdname h5Write
@@ -1697,7 +1694,7 @@ h5Write.list <- function(
   
   # Unlike vectors or arrays, creating an empty H5Group for an empty list 
   # does make sense.
-  h5CreateGroup(x = h5fh, name = name)
+  .h5group_create_group(h5group = h5fh, name = name, show.warnings = FALSE)
   for (i in seq_along(along.with = x)) {
     h5Write(
       x = x[[i]],
@@ -1708,12 +1705,7 @@ h5Write.list <- function(
       ...
     )
   }
-  h5WriteAttr(x = h5fh, name = name, which = "encoding-type", robj = "dict")
-  h5WriteAttr(
-    x = h5fh,
-    name = name,
-    which = "encoding-version",
-    robj = "0.1.0"
-  )
+  extra <- list("encoding-type" = "dict", "encoding-version" = "0.1.0")
+  .h5write_add_extra(extra = extra, h5group = h5fh, name = name)
   return(invisible(x = NULL))
 }

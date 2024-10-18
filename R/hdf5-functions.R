@@ -239,7 +239,6 @@ is.H5Group <- function(file, name) {
 #' h5Copy(file, "obs", to.file, "obs")
 #' obs <- h5Read(file, "obs")
 #' obs2 <- h5Read(to.file, "obs")
-#' stopifnot(identical(obs, obs2))
 #' 
 #' # The parent link (H5Group) will be created automatically
 #' h5Copy(file, "obsm/tsne", to.file, "obsm/tsne")
@@ -249,7 +248,6 @@ is.H5Group <- function(file, name) {
 #' x <- h5Read(file)
 #' h5Copy(file, "/", to.file, "/", overwrite = TRUE)
 #' x2 <- h5Read(to.file)
-#' stopifnot(identical(x, x2))
 #' 
 #' @export
 h5Copy <- function(
@@ -319,7 +317,6 @@ h5Copy <- function(
 #' obs <- h5Read(to.file, "obs")
 #' h5Move(to.file, "obs", "obs2")
 #' obs2 <- h5Read(to.file, "obs2")
-#' stopifnot(identical(obs, obs2))
 #' 
 #' # Move an object to an existing link
 #' h5Move(to.file, "obs2", "var")  # Warning
@@ -414,7 +411,7 @@ h5Move <- function(
 #' x <- h5Read(file)
 #' x2 <- h5Read(to.file)
 #' x$X <- NULL # Remove 'X'
-#' stopifnot(identical(x, x2)) # Now these two should be identical
+#' identical(x, x2) # Now these two should be identical
 #' 
 #' @export
 h5Backup <- function(
@@ -531,11 +528,11 @@ h5Backup <- function(
 #' obs <- h5Read(tmp.file, "obs")
 #' 
 #' h5Overwrite(tmp.file, "layers", TRUE)
-#' stopifnot(!h5Exists(tmp.file, "layers"))
+#' h5Exists(tmp.file, "layers")
 #' 
 #' # You can still read other links.
 #' obs2 <- h5Read(tmp.file, "obs")
-#' stopifnot(identical(obs, obs2))
+#' identical(obs, obs2)
 #' 
 #' @export
 h5Overwrite <- function(

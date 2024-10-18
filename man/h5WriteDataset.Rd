@@ -100,12 +100,12 @@ h5CreateDataset(
 ) # Must create the dataset first
 h5WriteDataset(tmp.file, FALSE, name = "test/bool")
 x <- h5Read(tmp.file, name = "test/bool")
-stopifnot(!x)
+x
 
 h5CreateDataset(tmp.file, name = "test/num", dims = 1)
 h5WriteDataset(tmp.file, 100.0, name = "test/num")
 x <- h5Read(tmp.file, name = "test/num")
-stopifnot(identical(x, 100.0))
+x
 
 h5CreateDataset(
   tmp.file, 
@@ -115,7 +115,7 @@ h5CreateDataset(
 )
 h5WriteDataset(tmp.file, "ABC", name = "test/string")
 x <- h5Read(tmp.file, name = "test/string")
-stopifnot(identical(x, "ABC"))
+x
 
 # Vector (1d array) ##########
 x1 <- rep(FALSE, 10)
@@ -127,7 +127,7 @@ h5CreateDataset(
 )
 h5WriteDataset(tmp.file, x1, name = "vec/bool")
 x <- h5Read(tmp.file, name = "vec/bool")
-stopifnot(identical(x, x1))
+x
 
 x1 <- rep(1.1, 10)
 h5CreateDataset(
@@ -137,7 +137,7 @@ h5CreateDataset(
 )
 h5WriteDataset(tmp.file, x1, name = "vec/num")
 x <- h5Read(tmp.file, name = "vec/num")
-stopifnot(identical(x, x1))
+x
 
 x1 <- rep(2.0, 5)
 h5WriteDataset(
@@ -162,7 +162,7 @@ h5WriteDataset(
   name = "mat/num"
 )
 x <- h5Read(tmp.file, name = "mat/num")
-stopifnot(identical(x, x1))
+x
 
 x1 <- matrix(2.0, 3, 4)
 h5WriteDataset(

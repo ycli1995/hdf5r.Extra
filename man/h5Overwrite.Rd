@@ -46,10 +46,10 @@ file.copy(file, tmp.file)
 obs <- h5Read(tmp.file, "obs")
 
 h5Overwrite(tmp.file, "layers", TRUE)
-stopifnot(!h5Exists(tmp.file, "layers"))
+h5Exists(tmp.file, "layers")
 
 # You can still read other links.
 obs2 <- h5Read(tmp.file, "obs")
-stopifnot(identical(obs, obs2))
+identical(obs, obs2)
 
 }

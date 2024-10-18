@@ -1,3 +1,15 @@
+# hdf5r.Extra 0.1.0
+## Add
+* Add `tests`
+* Add `add.dimnames` parameter in `h5Write` method for sparse matrix.
+
+## Removal
+* Remove `toS4.func` for `h5Read`.
+* Remove `dimnames` parameter in `h5Write` method for sparse matrix.
+
+## Change
+* `h5Open` cannot open `"/"` for an H5Group.
+
 # hdf5r.Extra 0.0.6
 ## Add
 * Use `verboseMsg()` to handle progress info.

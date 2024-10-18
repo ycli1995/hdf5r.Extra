@@ -672,14 +672,25 @@
   return(invisible(x = NULL))
 }
 
+.h5write_add_extra <- function(extra, h5group, name, ...) {
+  h5obj <- h5Open(x = h5group, name = name)
+  if (!inherits(x = h5obj, what = "H5File")) {
+    on.exit(expr = h5obj$close())
+  }
+  for (i in names(x = extra)) {
+    .h5attr_write(h5obj = h5obj, which = i, robj = extra[[i]], ...)
+  }
+  return(invisible(x = NULL))
+}
+
 .h5d_set_encode <- function(robj, h5d, ...) {
   type.x <- typeof(x = robj)
-  .h5attr_write(h5obj = h5d, which = "encoding-version", robj = "0.2.0")
   encoding_type <- "array"
   if (is.character(x = robj)) {
     encoding_type <- "string-array"
   }
   .h5attr_write(h5obj = h5d, which = "encoding-type", robj = encoding_type)
+  .h5attr_write(h5obj = h5d, which = "encoding-version", robj = "0.2.0")
   return(invisible(x = NULL))
 }
 
@@ -810,19 +821,12 @@
       ...
     )
   }
-  h5WriteAttr(x = h5group, name = name, which = "ordered", robj = ordered)
-  h5WriteAttr(
-    x = h5group, 
-    name = name, 
-    which = "encoding-type", 
-    robj = "categorical"
+  extra <- list(
+    "encoding-type" = "categorical", 
+    "encoding-version" = "0.2.0",
+    "ordered" = ordered
   )
-  h5WriteAttr(
-    x = h5group, 
-    name = name,
-    which = "encoding-version",
-    robj = "0.2.0"
-  )
+  .h5write_add_extra(extra = extra, h5group = h5group, name = name)
   return(invisible(x = NULL))
 }
 
@@ -841,24 +845,12 @@
     gzip_level = gzip_level,
     ...
   )
-  h5WriteAttr(
-    x = h5group, 
-    name = name, 
-    which = "encoding-type",
-    robj = "dataframe"
+  extra <- list(
+    "encoding-type" = "dataframe", 
+    "encoding-version" = "0.2.0",
+    "_index" = "_index"
   )
-  h5WriteAttr(
-    x = h5group, 
-    name = name, 
-    which = "encoding-version",
-    robj = "0.2.0"
-  )
-  h5WriteAttr(
-    x = h5group, 
-    name = name, 
-    which = "_index",
-    robj = "_index"
-  )
+  .h5write_add_extra(extra = extra, h5group = h5group, name = name)
   if (ncol(x = robj) == 0) {
     ## Must add an empty 'column-order' to match anndata's IOSpec
     h5obj <- h5group$open(name = name)
@@ -954,9 +946,7 @@
     "encoding-version" = "0.1.0",
     "shape" = rev(x = dim(x = robj))
   )
-  for (i in names(extra)) {
-    h5WriteAttr(x = h5group, name = name, which = i, robj = extra[[i]])
-  }
+  .h5write_add_extra(extra = extra, h5group = h5group, name = name)
   if (add.shape) {
     .h5group_write_vector(
       robj = rev(x = dim(x = robj)), 
@@ -1055,7 +1045,7 @@
 
 .h5read_dataframe <- function(h5obj) {
   col_orders <- .h5get_column_order(h5obj = h5obj)
-  index <- h5Attr(x = h5obj, which = "_index")
+  index <- .h5attr(h5obj = h5obj, which = "_index")
   r_list <- .h5read_list(h5obj = h5obj)
   rownames <- NULL
   if (length(x = index) > 0) {
@@ -1088,7 +1078,7 @@
 #' @importFrom hdf5r h5garbage_collect
 #' @importMethodsFrom Matrix t
 .h5read_sparse <- function(h5obj, transpose = FALSE) {
-  dims <- h5Attr(x = h5obj, which = "shape")
+  dims <- .h5attr(h5obj = h5obj, which = "shape")
   h5data <- h5obj$open(name = "data")
   on.exit(expr = h5data$close(), add = TRUE)
   h5indices <- h5obj$open(name = "indices")

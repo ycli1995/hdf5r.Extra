@@ -48,18 +48,18 @@ h5CreateFile(tmp.file)
 
 h5WriteScalar(tmp.file,  name = "test/scalar", TRUE)
 x <- h5ReadDataset(tmp.file, name = "test/scalar")
-stopifnot(x)
+x
 
 h5WriteScalar(tmp.file,  name = "test/scalar", 100.0, overwrite = TRUE)
 x <- h5ReadDataset(tmp.file, name = "test/scalar")
-stopifnot(identical(x, 100.0))
+x
 
 h5WriteScalar(tmp.file,  name = "test/scalar", "ABC", overwrite = TRUE)
 x <- h5Read(tmp.file, name = "test/scalar")
-stopifnot(identical(x, "ABC"))
+x
 
 h5WriteScalar(tmp.file,  name = "test/factor", factor("ABC"))
 x <- h5ReadDataset(tmp.file, name = "test/factor")
-stopifnot(identical(x, factor("ABC")))
+x
 
 }

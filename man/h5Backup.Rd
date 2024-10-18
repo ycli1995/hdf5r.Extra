@@ -48,6 +48,6 @@ h5Backup(file, to.file, exclude = "X")
 x <- h5Read(file)
 x2 <- h5Read(to.file)
 x$X <- NULL # Remove 'X'
-stopifnot(identical(x, x2)) # Now these two should be identical
+identical(x, x2) # Now these two should be identical
 
 }

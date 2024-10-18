@@ -105,45 +105,39 @@ x <- h5Read(file, "/raw/X/data")
 h5Write(x, tmp.file, "raw/X/data")
 x2 <- h5Read(tmp.file, "raw/X/data")
 
-\donttest{
 # matrix -----------------------
 x <- h5Read(file, "X")
 h5Write(x, tmp.file, "X")
 x2 <- h5Read(tmp.file, "X")
-stopifnot(identical(x, x2))
+identical(x, x2)
 
 h5Write(x, tmp.file, "X2", transpose = TRUE)
 x2 <- h5Read(tmp.file, "X2")
-stopifnot(identical(t(x), x2))
-}
+identical(t(x), x2)
 
-\donttest{
 # data.frame -----------------------
 x <- h5Read(file, "obs")
 h5Write(x, tmp.file, "obs")
 x2 <- h5Read(tmp.file, "obs")
-stopifnot(identical(x, x2))
+identical(x, x2)
 
 x <- h5Read(file, "raw/var") # data.frame with empty column
 h5Write(x, tmp.file, "raw/var")
 x2 <- h5Read(tmp.file, "raw/var")
-stopifnot(identical(x, x2))
-}
+identical(x, x2)
 
 
 # dgCMatrix -----------------------
 x <- h5Read(file, "raw/X")
 h5Write(x, tmp.file, "raw/X", overwrite = TRUE)
 x2 <- h5Read(tmp.file, "raw/X")
-stopifnot(identical(x, x2))
+identical(x, x2)
 
-\donttest{
 # list -----------------------
 x <- h5Read(file)
 h5Write(x, tmp.file, name = NULL, overwrite = TRUE)
 x2 <- h5Read(tmp.file)
-stopifnot(identical(x, x2))
-}
+identical(x, x2)
 
 }
 \references{

@@ -35,7 +35,6 @@ file.copy(file, to.file)
 obs <- h5Read(to.file, "obs")
 h5Move(to.file, "obs", "obs2")
 obs2 <- h5Read(to.file, "obs2")
-stopifnot(identical(obs, obs2))
 
 # Move an object to an existing link
 h5Move(to.file, "obs2", "var")  # Warning
