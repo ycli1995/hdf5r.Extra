@@ -1314,48 +1314,23 @@ h5ReadDataset.character <- function(
 #' @param name Name of the HDF5 link to be read.
 #' @param transpose Whether or not to transpose the read matrix. Only works for 
 #' a 2-dimension array-like data.
-#' @param toS4.func A function to convert the read R list into an S4 object. 
 #' 
 #' @export
 #' @rdname h5Read
 #' @method h5Read H5Group
-h5Read.H5Group <- function(
-    x, 
-    name = NULL, 
-    transpose = FALSE, 
-    toS4.func = NULL, 
-    ...
-) {
-  return(.h5group_read(
-    h5group = x, 
-    name = name, 
-    transpose = transpose, 
-    toS4.func = toS4.func, 
-    ...
-  ))
+h5Read.H5Group <- function(x, name = NULL, transpose = FALSE, ...) {
+  return(.h5group_read(h5group = x, name = name, transpose = transpose, ...))
 }
 
 #' @export
 #' @rdname h5Read
 #' @method h5Read H5File
-h5Read.H5File <- function(
-    x, 
-    name = NULL,  
-    transpose = FALSE, 
-    toS4.func = NULL, 
-    ...
-) {
+h5Read.H5File <- function(x, name = NULL, transpose = FALSE, ...) {
   name <- h5AbsLinkName(name = name)
-  if (identical(x = name, y = "/")) {
+  if (name == "/") {
     name <- NULL
   }
-  return(.h5group_read(
-    h5group = x, 
-    name = name, 
-    transpose = transpose, 
-    toS4.func = toS4.func, 
-    ...
-  ))
+  return(.h5group_read(h5group = x, name = name, transpose = transpose, ...))
 }
 
 #' @examples
@@ -1388,22 +1363,10 @@ h5Read.H5File <- function(
 #' @export
 #' @rdname h5Read
 #' @method h5Read character
-h5Read.character <- function(
-    x, 
-    name = NULL,  
-    transpose = FALSE, 
-    toS4.func = NULL, 
-    ...  
-) {
+h5Read.character <- function(x, name = NULL, transpose = FALSE, ...) {
   h5fh <- h5TryOpen(filename = x, mode = "r")
   on.exit(expr = h5fh$close())
-  return(h5Read(
-    x = h5fh, 
-    name = name, 
-    transpose = transpose, 
-    toS4.func = toS4.func,
-    ...
-  ))
+  return(h5Read(x = h5fh, name = name, transpose = transpose, ...))
 }
 
 #' @export

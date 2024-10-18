@@ -528,13 +528,7 @@
   ))
 }
 
-.h5group_read <- function(
-    h5group, 
-    name = NULL, 
-    transpose = FALSE, 
-    toS4.func = NULL, 
-    ...
-) {
+.h5group_read <- function(h5group, name = NULL, transpose = FALSE, ...) {
   if (!is.null(x = name)) {
     h5obj <- h5Open(x = h5group, name = name)
     if (!identical(x = h5obj, y = h5group)) {
@@ -543,16 +537,11 @@
     if (inherits(x = h5obj, what = "H5D")) {
       return(h5ReadDataset(x = h5obj, transpose = transpose))
     }
-    return(h5Read(
-      x = h5obj, 
-      transpose = transpose, 
-      toS4.func = toS4.func, 
-      ...
-    ))
+    return(h5Read(x = h5obj, transpose = transpose, ...))
   }
   encoding_type <- h5Attr(x = h5group, which = "encoding-type")
   encoding_type <- encoding_type %||% ""
-  r_obj <- switch(
+  robj <- switch(
     EXPR = encoding_type,
     "categorical" = .h5read_factor(h5obj = h5group),
     "dataframe" = .h5read_dataframe(h5obj = h5group),
@@ -562,16 +551,8 @@
     "nullable-integer" = .h5read_nullable(h5obj = h5group),
     .h5read_list(h5obj = h5group, transpose = transpose, ...)
   )
-  if (is.null(x = toS4.func)) {
-    return(r_obj)
-  }
-  if (!is.function(x = toS4.func)) {
-    stop("\n  'toS4.func' must be NULL or a function.")
-  }
-  S4Class <- h5Attr(x = h5group, which = "S4Class")
-  return(toS4.func(r_obj, S4Class))
+  return(robj)
 }
-
 
 ## Assertive helpers ===========================================================
 #' @importFrom hdf5r H5D

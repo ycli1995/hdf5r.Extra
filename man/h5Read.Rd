@@ -9,11 +9,11 @@
 \usage{
 h5Read(x, name = NULL, ...)
 
-\method{h5Read}{H5Group}(x, name = NULL, transpose = FALSE, toS4.func = NULL, ...)
+\method{h5Read}{H5Group}(x, name = NULL, transpose = FALSE, ...)
 
-\method{h5Read}{H5File}(x, name = NULL, transpose = FALSE, toS4.func = NULL, ...)
+\method{h5Read}{H5File}(x, name = NULL, transpose = FALSE, ...)
 
-\method{h5Read}{character}(x, name = NULL, transpose = FALSE, toS4.func = NULL, ...)
+\method{h5Read}{character}(x, name = NULL, transpose = FALSE, ...)
 }
 \arguments{
 \item{x}{An \code{\link[hdf5r]{H5File}}, \code{\link[hdf5r]{H5Group}} or a 
@@ -25,8 +25,6 @@ path name of HDF5 file.}
 
 \item{transpose}{Whether or not to transpose the read matrix. Only works for 
 a 2-dimension array-like data.}
-
-\item{toS4.func}{A function to convert the read R list into an S4 object.}
 }
 \value{
 The load R object. Currently support \code{vector}, \code{matrix}, 
